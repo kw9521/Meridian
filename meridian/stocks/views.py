@@ -3,11 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import random
-
 import json, yfinance as yf
+
 from .models import Holding, Transaction
 from login.models import Profile
 from django.db.models import Sum
+from django.conf import settings
+
 
 @login_required
 def api_simulate(request, ticker):
@@ -321,3 +323,159 @@ def api_sell(request):
 def api_user(request):
     profile = Profile.objects.get(user=request.user)
     return JsonResponse({'username': request.user.username, 'balance': profile.balance})
+
+# stimulate time traveling to see gains/losses on a past date using real historical data
+@login_required
+def api_timetravel(request):
+    """
+    Given a date offset (days ago), return what each holding would be worth
+    at that point in time using real historical data.
+    """
+    days_ago = int(request.GET.get('days', 0))
+    from datetime import datetime, timedelta
+    import pandas as pd
+    
+    target_date = datetime.now() - timedelta(days=days_ago)
+    
+    conn_holdings = Holding.objects.filter(user=request.user).values('ticker').annotate(total_shares=Sum('shares'))
+    
+    results = []
+    total_then = 0
+    total_now = 0
+    
+    for h in conn_holdings:
+        if h['total_shares'] <= 0:
+            continue
+        try:
+            stock = yf.Ticker(h['ticker'])
+            # Pull enough history to cover the range
+            history = stock.history(period='1y')
+            if history.empty:
+                continue
+            
+            # Get price at target date (closest trading day)
+            history.index = history.index.tz_localize(None)
+            past = history[history.index <= target_date]
+            now = history
+            
+            if past.empty:
+                continue
+                
+            price_then = round(float(past['Close'].iloc[-1]), 2)
+            price_now = round(float(now['Close'].iloc[-1]), 2)
+            shares = h['total_shares']
+            value_then = round(price_then * shares, 2)
+            value_now = round(price_now * shares, 2)
+            gain = round(value_now - value_then, 2)
+            gain_pct = round((gain / value_then) * 100, 2) if value_then else 0
+            
+            total_then += value_then
+            total_now += value_now
+            
+            results.append({
+                'ticker': h['ticker'],
+                'shares': shares,
+                'price_then': price_then,
+                'price_now': price_now,
+                'value_then': value_then,
+                'value_now': value_now,
+                'gain': gain,
+                'gain_pct': gain_pct,
+            })
+        except Exception as e:
+            continue
+    
+    total_gain = round(total_now - total_then, 2)
+    total_gain_pct = round((total_gain / total_then) * 100, 2) if total_then else 0
+    
+    return JsonResponse({
+        'days_ago': days_ago,
+        'date': target_date.strftime('%b %d, %Y'),
+        'total_then': round(total_then, 2),
+        'total_now': round(total_now, 2),
+        'total_gain': total_gain,
+        'total_gain_pct': total_gain_pct,
+        'holdings': results,
+    })
+
+# to get real life articles as to what might have happened to a stock over a given time period
+# and use Gemini to explain the move in simple terms
+@login_required  
+def api_stock_story(request, ticker):
+    """
+    Returns real news headlines + a Gemini-powered explanation
+    of why a stock moved over a given time period.
+    """
+    days = int(request.GET.get('days', 30))
+    
+    # ── Pull real news from Yahoo Finance ──────────────────────────
+    try:
+        import requests as req
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        news_url = f'https://query2.finance.yahoo.com/v1/finance/search?q={ticker}&quotesCount=0&newsCount=5'
+        news_res = req.get(news_url, headers=headers, timeout=5)
+        news_data = news_res.json()
+        articles = news_data.get('news', [])
+        headlines = [a.get('title', '') for a in articles if a.get('title')][:5]
+    except:
+        headlines = []
+
+    # ── Get price change data ──────────────────────────────────────
+    try:
+        from datetime import datetime, timedelta
+        stock = yf.Ticker(ticker)
+        history = stock.history(period='1y')
+        history.index = history.index.tz_localize(None)
+        target = datetime.now() - timedelta(days=days)
+        past = history[history.index <= target]
+        price_then = round(float(past['Close'].iloc[-1]), 2) if not past.empty else None
+        price_now = round(float(history['Close'].iloc[-1]), 2)
+        info = stock.info
+        company_name = info.get('longName', ticker)
+        sector = info.get('sector', '')
+    except:
+        price_then = None
+        price_now = None
+        company_name = ticker
+        sector = ''
+
+    # ── Ask Gemini to explain the move ────────────────────────────
+    ai_summary = None
+    try:
+        import requests as req
+        change_str = ''
+        if price_then and price_now:
+            change = round(price_now - price_then, 2)
+            change_pct = round((change / price_then) * 100, 1)
+            direction = 'up' if change >= 0 else 'down'
+            change_str = f"The stock moved {direction} {abs(change_pct)}% (from ${price_then} to ${price_now}) over the past {days} days."
+
+        headlines_str = '\n'.join(f'- {h}' for h in headlines) if headlines else 'No headlines available.'
+
+        prompt = f"""You are a financial educator helping beginners understand the stock market.
+
+Company: {company_name} ({ticker}), Sector: {sector}
+{change_str}
+
+Recent headlines:
+{headlines_str}
+
+In 2-3 short, plain-English sentences, explain to a beginner WHY this stock likely moved the way it did over this period. Reference the headlines if relevant. Be specific but avoid jargon. Do not use bullet points."""
+
+        gemini_res = req.post(
+            f'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={settings.GEMINI_API_KEY}',
+            json={'contents': [{'parts': [{'text': prompt}]}]},
+            timeout=10
+        )
+        gemini_data = gemini_res.json()
+        ai_summary = gemini_data['candidates'][0]['content']['parts'][0]['text']
+    except:
+        ai_summary = None
+
+    return JsonResponse({
+        'ticker': ticker,
+        'headlines': [{'title': a.get('title',''), 'link': a.get('link',''), 'publisher': a.get('publisher','')} for a in articles[:5]] if articles else [],
+        'ai_summary': ai_summary,
+        'price_then': price_then,
+        'price_now': price_now,
+    })

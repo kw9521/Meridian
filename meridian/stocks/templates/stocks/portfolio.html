@@ -1,49 +1,442 @@
 {% extends "stocks/base.html" %}
 {% block nav_portfolio %}active{% endblock %}
 {% block content %}
+<style>
+  .sum-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+  .sum-label { font-size:11px; color:var(--text3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .sum-val { font-family:var(--font-mono); font-weight:700; font-size:20px; }
+  table { width:100%; border-collapse:collapse; background:var(--bg2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  th { padding:12px 16px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); text-align:left; background:var(--bg3); border-bottom:1px solid var(--border); }
+  td { padding:14px 16px; font-family:var(--font-mono); font-size:13px; border-bottom:1px solid var(--border); }
+  tr:hover td { background:var(--bg3); cursor:pointer; }
+  .positive { color:var(--green); }
+  .negative { color:var(--red); }
+  .preset-btn {
+    padding:5px 12px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:var(--bg3);
+    color:var(--text2);
+    font-size:12px;
+    cursor:pointer;
+    font-family:var(--font-mono);
+    transition:all 0.15s;
+  }
+  .preset-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .preset-btn.active { border-color:var(--accent); background:var(--accent2); color:#fff; }
+  .tt-stat {
+    background:var(--bg3);
+    border-radius:8px;
+    padding:14px;
+    border:1px solid var(--border);
+  }
+  .tt-stat-label {
+    font-size:10px;
+    font-family:var(--font-mono);
+    color:var(--text3);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:5px;
+  }
+  .tt-stat-val {
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:18px;
+  }
+  .story-panel {
+    display:none;
+    border-top:1px solid var(--border);
+    padding:16px;
+    animation:fadeIn 0.3s ease;
+  }
+  .news-link {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    padding:10px 12px;
+    background:var(--bg4);
+    border-radius:8px;
+    border:1px solid var(--border);
+    text-decoration:none;
+    transition:border-color 0.15s;
+    margin-bottom:8px;
+  }
+  .news-link:hover { border-color:var(--accent); }
+  .why-btn {
+    font-size:11px;
+    font-family:var(--font-mono);
+    color:var(--text3);
+    background:var(--bg4);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:3px 8px;
+    cursor:pointer;
+    transition:all 0.15s;
+    white-space:nowrap;
+  }
+  .why-btn:hover { border-color:var(--accent); color:var(--accent); }
+</style>
+
 <div class="animate-in">
   <h1 style="font-weight:800;font-size:28px;letter-spacing:-0.5px;margin-bottom:4px">My Portfolio</h1>
-  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">Your virtual holdings and performance.</p>
-  <div id="summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:28px"></div>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">Your virtual holdings and performance at a glance.</p>
+
+  <!-- Summary Cards -->
+  <div id="summaryCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:28px">
+    <div style="padding:40px;text-align:center;color:var(--text2);grid-column:1/-1">
+      <div style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div>
+      Loading portfolio...
+    </div>
+  </div>
+
+  <!-- ─── Time Machine ─────────────────────────────────────────── -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px">
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:20px">⏳</span>
+      <div style="font-weight:700;font-size:18px">Time Machine</div>
+      <span style="font-size:11px;font-family:var(--font-mono);color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;border:1px solid var(--border)">DEMO</span>
+    </div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:20px">
+      See what your current holdings would have been worth if you had bought them at a different point in time.
+      Click <strong style="color:var(--text)">"Why?"</strong> on any stock to see real news and an AI explanation of what happened.
+    </p>
+
+    <!-- Slider -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--text2);font-family:var(--font-mono)">Today</span>
+        <span id="sliderLabel" style="font-size:13px;font-weight:700;font-family:var(--font-mono);color:var(--accent)">Today</span>
+        <span style="font-size:12px;color:var(--text2);font-family:var(--font-mono)">1 Year Ago</span>
+      </div>
+      <input
+        id="timeSlider"
+        type="range" min="0" max="365" value="0"
+        style="width:100%;accent-color:var(--accent);cursor:pointer;height:6px"
+        oninput="updateSliderLabel(this.value)"
+        onchange="runTimeTravel(this.value)"
+      >
+
+      <!-- Quick Presets -->
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="preset-btn active" onclick="setPreset(0)"   id="preset-0">Today</button>
+        <button class="preset-btn"        onclick="setPreset(7)"   id="preset-7">1 Week ago</button>
+        <button class="preset-btn"        onclick="setPreset(30)"  id="preset-30">1 Month ago</button>
+        <button class="preset-btn"        onclick="setPreset(90)"  id="preset-90">3 Months ago</button>
+        <button class="preset-btn"        onclick="setPreset(180)" id="preset-180">6 Months ago</button>
+        <button class="preset-btn"        onclick="setPreset(365)" id="preset-365">1 Year ago</button>
+      </div>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="ttLoading" style="display:none;text-align:center;padding:20px;color:var(--text2)">
+      <div style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div>
+      Traveling through time...
+    </div>
+
+    <!-- No holdings message -->
+    <div id="ttEmpty" style="display:none;padding:20px;text-align:center;color:var(--text2);font-size:14px">
+      Buy some stocks first to use the Time Machine.
+    </div>
+
+    <!-- Results -->
+    <div id="timeTravelResult" style="display:none;animation:fadeIn 0.3s ease">
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+
+        <!-- Summary stats -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px">
+          <div class="tt-stat">
+            <div class="tt-stat-label">Portfolio Then</div>
+            <div class="tt-stat-val" id="ttThen">—</div>
+            <div id="ttDate" style="font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--font-mono)"></div>
+          </div>
+          <div class="tt-stat">
+            <div class="tt-stat-label">Portfolio Now</div>
+            <div class="tt-stat-val" id="ttNow">—</div>
+          </div>
+          <div class="tt-stat">
+            <div class="tt-stat-label">Total Change</div>
+            <div class="tt-stat-val" id="ttGain">—</div>
+          </div>
+          <div class="tt-stat">
+            <div class="tt-stat-label">Return</div>
+            <div class="tt-stat-val" id="ttPct">—</div>
+          </div>
+        </div>
+
+        <!-- Per-stock breakdown label -->
+        <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">
+          Per Stock Breakdown — click "Why?" to see what happened
+        </div>
+
+        <!-- Stock rows -->
+        <div id="ttBreakdown" style="display:flex;flex-direction:column;gap:10px"></div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Holdings Table ───────────────────────────────────────── -->
   <div id="holdingsWrap"></div>
 </div>
-<style>
-  .sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
-  .sum-label{font-size:11px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
-  .sum-val{font-family:var(--font-mono);font-weight:700;font-size:20px;}
-  table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-  th{padding:12px 16px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);text-align:left;background:var(--bg3);border-bottom:1px solid var(--border);}
-  td{padding:14px 16px;font-family:var(--font-mono);font-size:13px;border-bottom:1px solid var(--border);}
-  tr:hover td{background:var(--bg3);cursor:pointer;}
-</style>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
-fetch('/stocks/api/portfolio/').then(r=>r.json()).then(d=>{
+function fmt(n) {
+  return n != null ? n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '—';
+}
+
+// ── Portfolio Summary ─────────────────────────────────────────────
+
+fetch('/stocks/api/portfolio/').then(r => r.json()).then(d => {
   const gPos = d.overall_gain >= 0;
-  document.getElementById('summary').innerHTML = [
-    ['Total Value', `$${d.total_value.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--text)'],
-    ['Cash', `$${d.balance.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--accent)'],
-    ['Invested', `$${d.invested_value.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--text)'],
-    ['Total Gain', `${gPos?'+':''}$${d.overall_gain.toLocaleString('en-US',{minimumFractionDigits:2})}`, gPos?'var(--green)':'var(--red)'],
-    ['Return', `${gPos?'+':''}${d.overall_gain_pct}%`, gPos?'var(--green)':'var(--red)'],
-  ].map(([l,v,c])=>`<div class="sum-card"><div class="sum-label">${l}</div><div class="sum-val" style="color:${c}">${v}</div></div>`).join('');
+
+  document.getElementById('summaryCards').innerHTML = [
+    ['Total Value',    `$${fmt(d.total_value)}`,                'var(--text)'],
+    ['Cash Available', `$${fmt(d.balance)}`,                    'var(--accent)'],
+    ['Invested',       `$${fmt(d.invested_value)}`,             'var(--text)'],
+    ['Total Gain',     `${gPos?'+':''}$${fmt(d.overall_gain)}`, gPos?'var(--green)':'var(--red)'],
+    ['Return %',       `${gPos?'+':''}${d.overall_gain_pct}%`,  gPos?'var(--green)':'var(--red)'],
+  ].map(([l, v, c]) => `
+    <div class="sum-card">
+      <div class="sum-label">${l}</div>
+      <div class="sum-val" style="color:${c}">${v}</div>
+    </div>`).join('');
 
   if (!d.holdings.length) {
-    document.getElementById('holdingsWrap').innerHTML = `<div style="padding:60px;text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--text2)"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-weight:700;margin-bottom:6px">No holdings yet</div><a href="/stocks/" style="display:inline-block;margin-top:12px;padding:10px 24px;background:var(--accent2);color:#fff;border-radius:8px;font-weight:700;text-decoration:none">Browse Stocks →</a></div>`;
+    document.getElementById('holdingsWrap').innerHTML = `
+      <div style="padding:60px;text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--text2)">
+        <div style="font-size:40px;margin-bottom:12px">📭</div>
+        <div style="font-weight:700;margin-bottom:6px">No holdings yet</div>
+        <div style="font-size:14px;margin-bottom:16px">Search for a stock and make your first investment.</div>
+        <a href="/stocks/" style="display:inline-block;padding:10px 24px;background:var(--accent2);color:#fff;border-radius:8px;font-weight:700;text-decoration:none">Browse Stocks →</a>
+      </div>`;
+    document.getElementById('ttEmpty').style.display = 'block';
     return;
   }
 
-  document.getElementById('holdingsWrap').innerHTML = `<div style="overflow-x:auto"><table>
-    <thead><tr>${['Ticker','Shares','Avg Cost','Current','Market Value','Gain/Loss','%'].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-    <tbody>${d.holdings.map(h=>{
-      const pos = h.gain_loss >= 0;
-      const c = pos?'var(--green)':'var(--red)';
-      return `<tr onclick="window.location='/stocks/stock/${h.ticker}/'">
-        <td><span style="font-weight:700;background:var(--bg3);padding:3px 8px;border-radius:5px">${h.ticker}</span></td>
-        <td>${h.shares}</td><td>$${h.avg_price.toFixed(2)}</td><td>$${h.current_price.toFixed(2)}</td>
-        <td style="font-weight:700">$${h.market_value.toLocaleString('en-US',{minimumFractionDigits:2})}</td>
-        <td style="color:${c}">${pos?'+':''}$${h.gain_loss.toFixed(2)}</td>
-        <td style="color:${c}">${pos?'+':''}${h.gain_loss_pct}%</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+  document.getElementById('holdingsWrap').innerHTML = `
+    <div style="font-weight:700;font-size:16px;margin-bottom:14px">Current Holdings</div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Shares</th>
+            <th>Avg Cost</th>
+            <th>Current Price</th>
+            <th>Market Value</th>
+            <th>Gain / Loss</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.holdings.map(h => {
+            const pos = h.gain_loss >= 0;
+            const c   = pos ? 'var(--green)' : 'var(--red)';
+            return `<tr onclick="window.location='/stocks/stock/${h.ticker}/'">
+              <td><span style="font-weight:700;background:var(--bg3);padding:3px 8px;border-radius:5px;font-family:var(--font-mono)">${h.ticker}</span></td>
+              <td>${h.shares}</td>
+              <td>$${fmt(h.avg_price)}</td>
+              <td>$${fmt(h.current_price)}</td>
+              <td style="font-weight:700">$${fmt(h.market_value)}</td>
+              <td style="color:${c};font-weight:700">${pos?'+':''}$${fmt(h.gain_loss)}</td>
+              <td style="color:${c};font-weight:700">${pos?'+':''}${h.gain_loss_pct}%</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
 });
+
+// ── Time Machine ──────────────────────────────────────────────────
+
+function updateSliderLabel(days) {
+  days = parseInt(days);
+  const label = document.getElementById('sliderLabel');
+  if      (days === 0)  label.textContent = 'Today';
+  else if (days === 1)  label.textContent = '1 day ago';
+  else if (days < 30)   label.textContent = `${days} days ago`;
+  else if (days < 60)   label.textContent = '~1 month ago';
+  else if (days < 335)  label.textContent = `~${Math.round(days/30)} months ago`;
+  else                  label.textContent = '1 year ago';
+
+  [0, 7, 30, 90, 180, 365].forEach(p => {
+    const btn = document.getElementById(`preset-${p}`);
+    if (btn) btn.classList.toggle('active', p === days);
+  });
+}
+
+function setPreset(days) {
+  document.getElementById('timeSlider').value = days;
+  updateSliderLabel(days);
+  runTimeTravel(days);
+}
+
+let ttTimer = null;
+
+async function runTimeTravel(days) {
+  days = parseInt(days);
+
+  if (days === 0) {
+    document.getElementById('timeTravelResult').style.display = 'none';
+    document.getElementById('ttLoading').style.display = 'none';
+    document.getElementById('ttEmpty').style.display = 'none';
+    return;
+  }
+
+  clearTimeout(ttTimer);
+  ttTimer = setTimeout(async () => {
+    document.getElementById('ttLoading').style.display = 'block';
+    document.getElementById('timeTravelResult').style.display = 'none';
+    document.getElementById('ttEmpty').style.display = 'none';
+
+    try {
+      const res = await fetch(`/stocks/api/timetravel/?days=${days}`);
+      const d   = await res.json();
+
+      document.getElementById('ttLoading').style.display = 'none';
+
+      if (!d.holdings || d.holdings.length === 0) {
+        document.getElementById('ttEmpty').style.display = 'block';
+        return;
+      }
+
+      const pos   = d.total_gain >= 0;
+      const color = pos ? 'var(--green)' : 'var(--red)';
+
+      document.getElementById('ttThen').textContent = `$${fmt(d.total_then)}`;
+      document.getElementById('ttNow').textContent  = `$${fmt(d.total_now)}`;
+      document.getElementById('ttDate').textContent = d.date;
+
+      const gainEl = document.getElementById('ttGain');
+      gainEl.textContent = `${pos?'+':''}$${fmt(d.total_gain)}`;
+      gainEl.style.color = color;
+
+      const pctEl = document.getElementById('ttPct');
+      pctEl.textContent = `${pos?'+':''}${d.total_gain_pct}%`;
+      pctEl.style.color = color;
+
+      // Per-stock rows with expandable story panels
+      document.getElementById('ttBreakdown').innerHTML = d.holdings.map(h => {
+        const hPos   = h.gain >= 0;
+        const hColor = hPos ? 'var(--green)' : 'var(--red)';
+        const arrow  = hPos ? '▲' : '▼';
+        return `
+          <div style="background:var(--bg3);border-radius:10px;border:1px solid var(--border);overflow:hidden">
+
+            <!-- Main stock row -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;flex-wrap:wrap;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="font-family:var(--font-mono);font-weight:700;font-size:15px;background:var(--bg4);padding:3px 8px;border-radius:5px">${h.ticker}</span>
+                <span style="font-size:12px;color:var(--text2)">${h.shares} shares</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:2px">Then</div>
+                  <div style="font-family:var(--font-mono);font-size:13px">$${fmt(h.price_then)}</div>
+                </div>
+                <div style="color:var(--text3);font-size:16px">→</div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:2px">Now</div>
+                  <div style="font-family:var(--font-mono);font-size:13px">$${fmt(h.price_now)}</div>
+                </div>
+                <div style="text-align:right;min-width:90px">
+                  <div style="font-family:var(--font-mono);font-weight:700;font-size:15px;color:${hColor}">${hPos?'+':''}$${fmt(h.gain)}</div>
+                  <div style="font-size:11px;color:${hColor}">${arrow} ${Math.abs(h.gain_pct)}%</div>
+                </div>
+                <button class="why-btn" id="why-btn-${h.ticker}" onclick="toggleStory('${h.ticker}', ${days})">
+                  ▼ Why?
+                </button>
+              </div>
+            </div>
+
+            <!-- Expandable story panel -->
+            <div class="story-panel" id="story-${h.ticker}">
+              <div id="story-content-${h.ticker}">
+                <div style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px">
+                  <div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>
+                  Loading insights...
+                </div>
+              </div>
+            </div>
+
+          </div>`;
+      }).join('');
+
+      document.getElementById('timeTravelResult').style.display = 'block';
+
+    } catch(e) {
+      document.getElementById('ttLoading').style.display = 'none';
+    }
+  }, 300);
+}
+
+// ── Stock Story (News + AI) ───────────────────────────────────────
+
+const storyCache = {};
+
+async function toggleStory(ticker, days) {
+  const panel   = document.getElementById(`story-${ticker}`);
+  const btn     = document.getElementById(`why-btn-${ticker}`);
+  const content = document.getElementById(`story-content-${ticker}`);
+
+  const isOpen = panel.style.display === 'block';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.textContent     = isOpen ? '▼ Why?' : '▲ Hide';
+
+  // If closing or already cached, just swap content
+  if (isOpen) return;
+  if (storyCache[ticker]) {
+    content.innerHTML = storyCache[ticker];
+    return;
+  }
+
+  // Fetch from backend
+  try {
+    const res  = await fetch(`/stocks/api/stockstory/${ticker}/?days=${days}`);
+    const data = await res.json();
+    let html   = '';
+
+    // AI Summary
+    if (data.ai_summary) {
+      html += `
+        <div style="display:flex;gap:12px;margin-bottom:20px;padding:14px;background:var(--bg4);border-radius:8px;border:1px solid rgba(88,166,255,0.2)">
+          <div style="font-size:22px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-size:11px;font-family:var(--font-mono);color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">AI Analysis · Gemini</div>
+            <p style="color:var(--text);font-size:14px;line-height:1.75;margin:0">${data.ai_summary}</p>
+          </div>
+        </div>`;
+    }
+
+    // News headlines
+    if (data.headlines && data.headlines.length > 0) {
+      html += `
+        <div>
+          <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📰 Recent News</div>
+          ${data.headlines.map(a => `
+            <a href="${a.link}" target="_blank" class="news-link">
+              <div style="color:var(--text);font-size:13px;line-height:1.5">${a.title}</div>
+              <div style="font-size:11px;color:var(--text3);white-space:nowrap;font-family:var(--font-mono);flex-shrink:0">${a.publisher} ↗</div>
+            </a>`).join('')}
+        </div>`;
+    }
+
+    if (!html) {
+      html = `<div style="color:var(--text3);font-size:13px;padding:8px 0">No insights available for this stock right now.</div>`;
+    }
+
+    storyCache[ticker] = html;
+    content.innerHTML  = html;
+
+  } catch(e) {
+    content.innerHTML = `<div style="color:var(--red);font-size:13px">Could not load insights. Check your connection.</div>`;
+  }
+}
 </script>
 {% endblock %}
