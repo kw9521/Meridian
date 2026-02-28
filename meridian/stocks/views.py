@@ -2,10 +2,37 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+import random
+
 import json, yfinance as yf
 from .models import Holding, Transaction
 from login.models import Profile
 from django.db.models import Sum
+
+@login_required
+def api_simulate(request, ticker):
+    """Returns a slightly randomized price for demo purposes."""
+    try:
+        stock = yf.Ticker(ticker.upper())
+        hist = stock.history(period='1d')
+        base_price = round(hist['Close'].iloc[-1], 2)
+        
+        # Random walk: ±0.5% per tick
+        change_pct = random.uniform(-0.005, 0.005)
+        simulated_price = round(base_price * (1 + change_pct), 2)
+        change = round(simulated_price - base_price, 2)
+        change_pct_display = round(change_pct * 100, 3)
+        
+        return JsonResponse({
+            'ticker': ticker.upper(),
+            'current_price': simulated_price,
+            'change': change,
+            'change_pct': change_pct_display,
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+
 
 @login_required
 def dashboard(request):
@@ -51,6 +78,18 @@ def api_stock(request, ticker):
             'sector': info.get('sector', 'N/A'),
             'market_cap': info.get('marketCap'),
             'history': data,
+            'description': info.get('longBusinessSummary', ''),
+            'week_52_high': info.get('fiftyTwoWeekHigh'),
+            'week_52_low': info.get('fiftyTwoWeekLow'),
+            'volume': info.get('volume'),
+            'avg_volume': info.get('averageVolume'),
+            'day_high': info.get('dayHigh'),
+            'day_low': info.get('dayLow'),
+            'pe_ratio': info.get('trailingPE'),
+            'dividend_yield': info.get('dividendYield'),
+            'employees': info.get('fullTimeEmployees'),
+            'website': info.get('website', ''),
+            'exchange': info.get('exchange', ''),
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

@@ -1,26 +1,66 @@
 {% extends "stocks/base.html" %}
 {% block content %}
+<style>
+  .stat-box {
+    background: var(--bg3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+  }
+  .stat-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>
+
 <div class="animate-in" id="stockPage">
   <a href="/stocks/" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">← Back to Market</a>
+
   <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin-top:12px">
+
+    <!-- Chart + Details Card -->
     <div id="chartCard" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <div style="padding:60px;text-align:center;color:var(--text2)">
         <div style="width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
         Loading...
       </div>
     </div>
+
+    <!-- Trade Panel -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;position:sticky;top:80px">
       <div style="font-weight:700;font-size:16px;margin-bottom:16px">Place Order</div>
+
+      <!-- Buy/Sell Tabs -->
       <div style="display:flex;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:16px">
         <button id="buyTab" onclick="setAction('BUY')" style="flex:1;padding:7px 0;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:var(--green2);color:#fff;transition:all 0.15s;font-family:var(--font-display)">BUY</button>
         <button id="sellTab" onclick="setAction('SELL')" style="flex:1;padding:7px 0;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:transparent;color:var(--text2);transition:all 0.15s;font-family:var(--font-display)">SELL</button>
       </div>
+
       <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Shares</div>
       <input id="sharesInput" type="number" min="0" placeholder="0"
-        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font-mono);font-size:16px;outline:none;margin-bottom:12px"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font-mono);font-size:16px;outline:none;margin-bottom:12px;transition:border-color 0.2s"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border2)'"
         oninput="updateTotal()">
+
       <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Market Price</div>
-      <div id="priceDisplay" style="font-family:var(--font-mono);font-size:16px;font-weight:700;margin-bottom:16px">—</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <div id="priceDisplay" style="font-family:var(--font-mono);font-size:16px;font-weight:700">—</div>
+        <span id="liveBadge" style="display:none;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(63,185,80,0.1);color:var(--green);border:1px solid rgba(63,185,80,0.3);font-family:var(--font-mono)">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-green 1.5s infinite;display:inline-block"></span>
+          LIVE
+        </span>
+      </div>
+
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
           <span style="color:var(--text2)">Est. Total</span>
@@ -31,10 +71,14 @@
           <span id="cashAfter" style="font-family:var(--font-mono)">—</span>
         </div>
       </div>
+
       <button id="tradeBtn" onclick="executeTrade()"
-        style="width:100%;padding:12px 0;border-radius:8px;border:none;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;margin-top:8px;background:var(--green2);color:#fff;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(63,185,80,0.2)">
+        style="width:100%;padding:12px 0;border-radius:8px;border:none;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;margin-top:8px;background:var(--green2);color:#fff;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(63,185,80,0.2)"
+        onmouseover="this.style.opacity='0.85'"
+        onmouseout="this.style.opacity='1'">
         BUY 0 {{ ticker }}
       </button>
+
       <div style="margin-top:14px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">
         ⚠️ Paper trading only. No real money involved.
       </div>
@@ -52,108 +96,296 @@ let currentPrice = 0;
 let currentAction = 'BUY';
 let userBalance = 0;
 let chart = null;
+let simulationInterval = null;
+let descExpanded = false;
 
-fetch('/stocks/api/user/').then(r=>r.json()).then(d=>{ userBalance = d.balance; updateTotal(); });
+// Load user balance
+fetch('/stocks/api/user/').then(r => r.json()).then(d => {
+  userBalance = d.balance;
+  updateTotal();
+});
 
-async function loadStock(period='3mo') {
+// ── Helpers ──────────────────────────────────────────────────────
+
+function statBox(label, value) {
+  return `<div class="stat-box">
+    <div class="stat-label">${label}</div>
+    <div class="stat-value">${value}</div>
+  </div>`;
+}
+
+function toggleDesc() {
+  const el = document.getElementById('descText');
+  const btn = document.getElementById('descBtn');
+  descExpanded = !descExpanded;
+  el.style.webkitLineClamp = descExpanded ? 'unset' : '3';
+  el.style.display = descExpanded ? 'block' : '-webkit-box';
+  btn.textContent = descExpanded ? 'Show less ↑' : 'Read more ↓';
+}
+
+function fmt(n, decimals = 2) {
+  return n ? n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : 'N/A';
+}
+
+// ── Load Stock ────────────────────────────────────────────────────
+
+
+
+async function loadStock(period = '3mo') {
   const res = await fetch(`/stocks/api/stock/${TICKER}/?period=${period}`);
   const d = await res.json();
-  if (d.error) return;
+  if (d.error) {
+    document.getElementById('chartCard').innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">Ticker not found.</div>`;
+    return;
+  }
+
   currentPrice = d.current_price;
   const pos = d.change_pct >= 0;
   const color = pos ? '#3fb950' : '#f85149';
 
+  // 52W progress bar position
+  const progress = d.week_52_low && d.week_52_high
+    ? Math.min(100, Math.max(0, ((d.current_price - d.week_52_low) / (d.week_52_high - d.week_52_low)) * 100)).toFixed(1)
+    : null;
+
   document.getElementById('chartCard').innerHTML = `
+
+    <!-- Header -->
     <div style="padding:24px 24px 0">
-      <div style="font-family:var(--font-mono);font-size:12px;color:var(--text2);letter-spacing:2px">${TICKER} · ${d.sector}</div>
-      <div style="font-weight:800;font-size:24px;margin-top:4px;letter-spacing:-0.5px">${d.name}</div>
-      <div style="display:flex;align-items:baseline;gap:12px;margin-top:12px">
-        <span style="font-family:var(--font-mono);font-size:34px;font-weight:700">$${d.current_price.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
-        <span style="font-family:var(--font-mono);font-size:15px;color:${color}">${pos?'▲':'▼'} ${Math.abs(d.change)} (${Math.abs(d.change_pct)}%)</span>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--text2);letter-spacing:2px">${TICKER}</span>
+        <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">${d.sector || 'N/A'}</span>
+        ${d.exchange ? `<span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">${d.exchange}</span>` : ''}
+      </div>
+      <div style="font-weight:800;font-size:24px;letter-spacing:-0.5px">${d.name}</div>
+      <div style="display:flex;align-items:baseline;gap:12px;margin-top:12px;flex-wrap:wrap">
+        <span style="font-family:var(--font-mono);font-size:34px;font-weight:700">$${fmt(d.current_price)}</span>
+        <span style="font-family:var(--font-mono);font-size:15px;color:${color}">
+          ${pos ? '▲' : '▼'} ${Math.abs(d.change).toFixed(2)} (${Math.abs(d.change_pct)}%)
+        </span>
       </div>
     </div>
-    <div style="display:flex;gap:4px;padding:16px 24px;border-bottom:1px solid var(--border)" id="periodBtns">
-      ${['1mo','3mo','6mo','1y'].map(p=>`<button onclick="loadStock('${p}')" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font-mono);font-size:12px;font-weight:700;background:${period===p?'var(--accent2)':'var(--bg3)'};color:${period===p?'#fff':'var(--text2)'};">${p}</button>`).join('')}
+
+    <!-- Period Buttons -->
+    <div style="display:flex;gap:4px;padding:16px 24px;border-bottom:1px solid var(--border)">
+      ${['1mo','3mo','6mo','1y'].map(p => `
+        <button onclick="loadStock('${p}')"
+          style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font-mono);font-size:12px;font-weight:700;
+          background:${period === p ? 'var(--accent2)' : 'var(--bg3)'};color:${period === p ? '#fff' : 'var(--text2)'}">
+          ${p}
+        </button>`).join('')}
     </div>
+
+    <!-- Chart -->
     <div style="padding:20px 12px 20px 0">
       <canvas id="myChart" height="120"></canvas>
+    </div>
+
+    <!-- Stats + Details -->
+    <div style="border-top:1px solid var(--border);padding:20px 24px">
+
+      <!-- Stats Grid -->
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Key Statistics</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
+        ${statBox('Day Range', d.day_low && d.day_high ? `$${d.day_low.toFixed(2)} — $${d.day_high.toFixed(2)}` : 'N/A')}
+        ${statBox('52W Range', d.week_52_low && d.week_52_high ? `$${d.week_52_low.toFixed(2)} — $${d.week_52_high.toFixed(2)}` : 'N/A')}
+        ${statBox('Volume', d.volume ? d.volume.toLocaleString() : 'N/A')}
+        ${statBox('Avg Volume', d.avg_volume ? d.avg_volume.toLocaleString() : 'N/A')}
+        ${statBox('Market Cap', d.market_cap ? `$${(d.market_cap / 1e9).toFixed(2)}B` : 'N/A')}
+        ${statBox('P/E Ratio', d.pe_ratio ? d.pe_ratio.toFixed(2) : 'N/A')}
+        ${statBox('Dividend Yield', d.dividend_yield ? `${(d.dividend_yield * 100).toFixed(2)}%` : 'N/A')}
+        ${statBox('Employees', d.employees ? d.employees.toLocaleString() : 'N/A')}
+        ${statBox('Exchange', d.exchange || 'N/A')}
+      </div>
+
+      <!-- 52 Week Progress Bar -->
+      ${progress !== null ? `
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">52 Week Position</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text2);white-space:nowrap">$${d.week_52_low.toFixed(2)}</span>
+          <div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;position:relative">
+            <div style="position:absolute;left:0;top:0;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red),var(--green));width:${progress}%"></div>
+            <div style="position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:white;border:2px solid var(--bg);box-shadow:0 0 6px rgba(0,0,0,0.5);left:${progress}%"></div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text2);white-space:nowrap">$${d.week_52_high.toFixed(2)}</span>
+        </div>
+      </div>` : ''}
+
+      <!-- Company Description -->
+      ${d.description ? `
+      <div>
+        <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">About ${d.name}</div>
+        <p id="descText" style="color:var(--text2);font-size:14px;line-height:1.7;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">
+          ${d.description}
+        </p>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+          <button onclick="toggleDesc()" id="descBtn"
+            style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;font-family:var(--font-display);font-weight:600">
+            Read more ↓
+          </button>
+          ${d.website ? `<a href="${d.website}" target="_blank"
+            style="color:var(--text3);font-size:13px;text-decoration:none;transition:color 0.15s"
+            onmouseover="this.style.color='var(--accent)'"
+            onmouseout="this.style.color='var(--text3)'">↗ Visit Website</a>` : ''}
+        </div>
+      </div>` : ''}
+
     </div>`;
 
+  // Update trade panel price
   document.getElementById('priceDisplay').textContent = `$${d.current_price.toFixed(2)}`;
   updateTotal();
 
-  const labels = d.history.map(h=>h.date);
-  const values = d.history.map(h=>h.close);
+  // Draw chart
+  const labels = d.history.map(h => h.date);
+  const values = d.history.map(h => h.close);
   const ctx = document.getElementById('myChart').getContext('2d');
-  const grad = ctx.createLinearGradient(0,0,0,300);
+  const grad = ctx.createLinearGradient(0, 0, 0, 300);
   grad.addColorStop(0, pos ? 'rgba(63,185,80,0.2)' : 'rgba(248,81,73,0.2)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 2, backgroundColor: grad, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 }] },
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: color,
+        borderWidth: 2,
+        backgroundColor: grad,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 4
+      }]
+    },
     options: {
-      responsive: true, interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}` } } },
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}` } }
+      },
       scales: {
-        x: { grid: { display: false }, ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, maxTicksLimit: 6 } },
-        y: { grid: { color: '#1e2d3d' }, ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, callback: v => `$${v}` } }
+        x: {
+          grid: { display: false },
+          ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, maxTicksLimit: 6 }
+        },
+        y: {
+          grid: { color: '#1e2d3d' },
+          ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, callback: v => `$${v}` }
+        }
       }
     }
   });
+
+  // Start live simulation
+  startSimulation();
 }
+
+// ── Live Simulation ───────────────────────────────────────────────
+
+function startSimulation() {
+  if (simulationInterval) clearInterval(simulationInterval);
+  const badge = document.getElementById('liveBadge');
+  if (badge) badge.style.display = 'inline-flex';
+
+  simulationInterval = setInterval(async () => {
+    const res = await fetch(`/stocks/api/simulate/${TICKER}/`);
+    const d = await res.json();
+    if (d.error) return;
+
+    currentPrice = d.current_price;
+    const pos = d.change >= 0;
+    const priceEl = document.getElementById('priceDisplay');
+    if (!priceEl) return;
+
+    priceEl.style.transition = 'color 0.2s';
+    priceEl.style.color = pos ? 'var(--green)' : 'var(--red)';
+    priceEl.textContent = `$${d.current_price.toFixed(2)}`;
+    setTimeout(() => { if (priceEl) priceEl.style.color = 'var(--text)'; }, 600);
+    updateTotal();
+  }, 3000);
+}
+
+// ── Trade Actions ─────────────────────────────────────────────────
 
 function setAction(a) {
   currentAction = a;
-  document.getElementById('buyTab').style.background = a==='BUY' ? 'var(--green2)' : 'transparent';
-  document.getElementById('buyTab').style.color = a==='BUY' ? '#fff' : 'var(--text2)';
-  document.getElementById('sellTab').style.background = a==='SELL' ? 'var(--red2)' : 'transparent';
-  document.getElementById('sellTab').style.color = a==='SELL' ? '#fff' : 'var(--text2)';
-  document.getElementById('tradeBtn').style.background = a==='BUY' ? 'var(--green2)' : 'var(--red2)';
+  document.getElementById('buyTab').style.background = a === 'BUY' ? 'var(--green2)' : 'transparent';
+  document.getElementById('buyTab').style.color = a === 'BUY' ? '#fff' : 'var(--text2)';
+  document.getElementById('sellTab').style.background = a === 'SELL' ? 'var(--red2)' : 'transparent';
+  document.getElementById('sellTab').style.color = a === 'SELL' ? '#fff' : 'var(--text2)';
+  document.getElementById('tradeBtn').style.background = a === 'BUY' ? 'var(--green2)' : 'var(--red2)';
+  document.getElementById('tradeBtn').style.boxShadow = a === 'BUY' ? '0 4px 16px rgba(63,185,80,0.2)' : '0 4px 16px rgba(248,81,73,0.2)';
   updateTotal();
 }
 
 function updateTotal() {
   const shares = parseFloat(document.getElementById('sharesInput')?.value) || 0;
   const total = shares * currentPrice;
-  const cashAfter = userBalance - (currentAction==='BUY' ? total : -total);
-  document.getElementById('totalDisplay').textContent = `$${total.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+  const cashAfter = currentAction === 'BUY' ? userBalance - total : userBalance + total;
+
+  const totalEl = document.getElementById('totalDisplay');
   const cashEl = document.getElementById('cashAfter');
-  if (cashEl) { cashEl.textContent = `$${Math.max(0,cashAfter).toLocaleString('en-US',{minimumFractionDigits:2})}`; cashEl.style.color = cashAfter < 0 ? 'var(--red)' : 'var(--green)'; }
   const btn = document.getElementById('tradeBtn');
+
+  if (totalEl) totalEl.textContent = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (cashEl) {
+    cashEl.textContent = `$${Math.max(0, cashAfter).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    cashEl.style.color = cashAfter < 0 ? 'var(--red)' : 'var(--green)';
+  }
   if (btn) btn.textContent = `${currentAction} ${shares} ${TICKER}`;
 }
 
 async function executeTrade() {
   const shares = parseFloat(document.getElementById('sharesInput').value);
   if (!shares || shares <= 0) return showToast('Enter a valid number of shares', false);
+
   const btn = document.getElementById('tradeBtn');
-  btn.textContent = 'Processing...'; btn.disabled = true;
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+
   const res = await fetch(`/stocks/api/${currentAction.toLowerCase()}/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
     body: JSON.stringify({ ticker: TICKER, shares, price: currentPrice })
   });
   const d = await res.json();
-  btn.disabled = false; updateTotal();
+  btn.disabled = false;
+  updateTotal();
+
   if (d.success) {
     showToast(d.message, true);
     document.getElementById('sharesInput').value = '';
-    fetch('/stocks/api/user/').then(r=>r.json()).then(u=>{ userBalance=u.balance; document.getElementById('navBalance').textContent='$'+u.balance.toLocaleString('en-US',{minimumFractionDigits:2}); updateTotal(); });
-  } else { showToast(d.error, false); }
+    fetch('/stocks/api/user/').then(r => r.json()).then(u => {
+      userBalance = u.balance;
+      document.getElementById('navBalance').textContent = '$' + u.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      updateTotal();
+    });
+  } else {
+    showToast(d.error, false);
+  }
 }
+
+// ── Utils ─────────────────────────────────────────────────────────
 
 function showToast(msg, ok) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.style.display='block';
+  t.textContent = msg;
+  t.style.display = 'block';
   t.style.background = ok ? 'var(--green2)' : '#b91c1c';
-  setTimeout(() => t.style.display='none', 3000);
+  setTimeout(() => t.style.display = 'none', 3000);
 }
 
 function getCookie(name) {
-  return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))?.split('=')[1] || '';
+  return document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith(name + '='))?.split('=')[1] || '';
 }
 
+// Stop simulation when leaving page
+window.addEventListener('beforeunload', () => clearInterval(simulationInterval));
+
+// Kick everything off
 loadStock();
 </script>
 {% endblock %}

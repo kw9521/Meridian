@@ -14,4 +14,6 @@ urlpatterns = [
     path('api/buy/', views.api_buy, name='api_buy'),
     path('api/sell/', views.api_sell, name='api_sell'),
     path('api/user/', views.api_user, name='api_user'),
+    path('api/simulate/<str:ticker>/', views.api_simulate, name='api_simulate'),
+
 ]
