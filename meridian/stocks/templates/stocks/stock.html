@@ -1,0 +1,159 @@
+{% extends "stocks/base.html" %}
+{% block content %}
+<div class="animate-in" id="stockPage">
+  <a href="/stocks/" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">← Back to Market</a>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin-top:12px">
+    <div id="chartCard" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <div style="padding:60px;text-align:center;color:var(--text2)">
+        <div style="width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
+        Loading...
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;position:sticky;top:80px">
+      <div style="font-weight:700;font-size:16px;margin-bottom:16px">Place Order</div>
+      <div style="display:flex;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:16px">
+        <button id="buyTab" onclick="setAction('BUY')" style="flex:1;padding:7px 0;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:var(--green2);color:#fff;transition:all 0.15s;font-family:var(--font-display)">BUY</button>
+        <button id="sellTab" onclick="setAction('SELL')" style="flex:1;padding:7px 0;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:transparent;color:var(--text2);transition:all 0.15s;font-family:var(--font-display)">SELL</button>
+      </div>
+      <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Shares</div>
+      <input id="sharesInput" type="number" min="0" placeholder="0"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font-mono);font-size:16px;outline:none;margin-bottom:12px"
+        oninput="updateTotal()">
+      <div style="font-size:11px;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Market Price</div>
+      <div id="priceDisplay" style="font-family:var(--font-mono);font-size:16px;font-weight:700;margin-bottom:16px">—</div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span style="color:var(--text2)">Est. Total</span>
+          <span id="totalDisplay" style="font-family:var(--font-mono);font-weight:700">$0.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span style="color:var(--text2)">Cash After</span>
+          <span id="cashAfter" style="font-family:var(--font-mono)">—</span>
+        </div>
+      </div>
+      <button id="tradeBtn" onclick="executeTrade()"
+        style="width:100%;padding:12px 0;border-radius:8px;border:none;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;margin-top:8px;background:var(--green2);color:#fff;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(63,185,80,0.2)">
+        BUY 0 {{ ticker }}
+      </button>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">
+        ⚠️ Paper trading only. No real money involved.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:fadeIn 0.3s ease;z-index:999"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const TICKER = "{{ ticker }}";
+let currentPrice = 0;
+let currentAction = 'BUY';
+let userBalance = 0;
+let chart = null;
+
+fetch('/stocks/api/user/').then(r=>r.json()).then(d=>{ userBalance = d.balance; updateTotal(); });
+
+async function loadStock(period='3mo') {
+  const res = await fetch(`/stocks/api/stock/${TICKER}/?period=${period}`);
+  const d = await res.json();
+  if (d.error) return;
+  currentPrice = d.current_price;
+  const pos = d.change_pct >= 0;
+  const color = pos ? '#3fb950' : '#f85149';
+
+  document.getElementById('chartCard').innerHTML = `
+    <div style="padding:24px 24px 0">
+      <div style="font-family:var(--font-mono);font-size:12px;color:var(--text2);letter-spacing:2px">${TICKER} · ${d.sector}</div>
+      <div style="font-weight:800;font-size:24px;margin-top:4px;letter-spacing:-0.5px">${d.name}</div>
+      <div style="display:flex;align-items:baseline;gap:12px;margin-top:12px">
+        <span style="font-family:var(--font-mono);font-size:34px;font-weight:700">$${d.current_price.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+        <span style="font-family:var(--font-mono);font-size:15px;color:${color}">${pos?'▲':'▼'} ${Math.abs(d.change)} (${Math.abs(d.change_pct)}%)</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;padding:16px 24px;border-bottom:1px solid var(--border)" id="periodBtns">
+      ${['1mo','3mo','6mo','1y'].map(p=>`<button onclick="loadStock('${p}')" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font-mono);font-size:12px;font-weight:700;background:${period===p?'var(--accent2)':'var(--bg3)'};color:${period===p?'#fff':'var(--text2)'};">${p}</button>`).join('')}
+    </div>
+    <div style="padding:20px 12px 20px 0">
+      <canvas id="myChart" height="120"></canvas>
+    </div>`;
+
+  document.getElementById('priceDisplay').textContent = `$${d.current_price.toFixed(2)}`;
+  updateTotal();
+
+  const labels = d.history.map(h=>h.date);
+  const values = d.history.map(h=>h.close);
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,300);
+  grad.addColorStop(0, pos ? 'rgba(63,185,80,0.2)' : 'rgba(248,81,73,0.2)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 2, backgroundColor: grad, tension: 0.3, pointRadius: 0, pointHoverRadius: 4 }] },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, maxTicksLimit: 6 } },
+        y: { grid: { color: '#1e2d3d' }, ticks: { color: '#484f58', font: { family: 'Space Mono', size: 10 }, callback: v => `$${v}` } }
+      }
+    }
+  });
+}
+
+function setAction(a) {
+  currentAction = a;
+  document.getElementById('buyTab').style.background = a==='BUY' ? 'var(--green2)' : 'transparent';
+  document.getElementById('buyTab').style.color = a==='BUY' ? '#fff' : 'var(--text2)';
+  document.getElementById('sellTab').style.background = a==='SELL' ? 'var(--red2)' : 'transparent';
+  document.getElementById('sellTab').style.color = a==='SELL' ? '#fff' : 'var(--text2)';
+  document.getElementById('tradeBtn').style.background = a==='BUY' ? 'var(--green2)' : 'var(--red2)';
+  updateTotal();
+}
+
+function updateTotal() {
+  const shares = parseFloat(document.getElementById('sharesInput')?.value) || 0;
+  const total = shares * currentPrice;
+  const cashAfter = userBalance - (currentAction==='BUY' ? total : -total);
+  document.getElementById('totalDisplay').textContent = `$${total.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+  const cashEl = document.getElementById('cashAfter');
+  if (cashEl) { cashEl.textContent = `$${Math.max(0,cashAfter).toLocaleString('en-US',{minimumFractionDigits:2})}`; cashEl.style.color = cashAfter < 0 ? 'var(--red)' : 'var(--green)'; }
+  const btn = document.getElementById('tradeBtn');
+  if (btn) btn.textContent = `${currentAction} ${shares} ${TICKER}`;
+}
+
+async function executeTrade() {
+  const shares = parseFloat(document.getElementById('sharesInput').value);
+  if (!shares || shares <= 0) return showToast('Enter a valid number of shares', false);
+  const btn = document.getElementById('tradeBtn');
+  btn.textContent = 'Processing...'; btn.disabled = true;
+  const res = await fetch(`/stocks/api/${currentAction.toLowerCase()}/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+    body: JSON.stringify({ ticker: TICKER, shares, price: currentPrice })
+  });
+  const d = await res.json();
+  btn.disabled = false; updateTotal();
+  if (d.success) {
+    showToast(d.message, true);
+    document.getElementById('sharesInput').value = '';
+    fetch('/stocks/api/user/').then(r=>r.json()).then(u=>{ userBalance=u.balance; document.getElementById('navBalance').textContent='$'+u.balance.toLocaleString('en-US',{minimumFractionDigits:2}); updateTotal(); });
+  } else { showToast(d.error, false); }
+}
+
+function showToast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display='block';
+  t.style.background = ok ? 'var(--green2)' : '#b91c1c';
+  setTimeout(() => t.style.display='none', 3000);
+}
+
+function getCookie(name) {
+  return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))?.split('=')[1] || '';
+}
+
+loadStock();
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "stocks/base.html" %}
+{% block nav_portfolio %}active{% endblock %}
+{% block content %}
+<div class="animate-in">
+  <h1 style="font-weight:800;font-size:28px;letter-spacing:-0.5px;margin-bottom:4px">My Portfolio</h1>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">Your virtual holdings and performance.</p>
+  <div id="summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:28px"></div>
+  <div id="holdingsWrap"></div>
+</div>
+<style>
+  .sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+  .sum-label{font-size:11px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .sum-val{font-family:var(--font-mono);font-weight:700;font-size:20px;}
+  table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  th{padding:12px 16px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);text-align:left;background:var(--bg3);border-bottom:1px solid var(--border);}
+  td{padding:14px 16px;font-family:var(--font-mono);font-size:13px;border-bottom:1px solid var(--border);}
+  tr:hover td{background:var(--bg3);cursor:pointer;}
+</style>
+<script>
+fetch('/stocks/api/portfolio/').then(r=>r.json()).then(d=>{
+  const gPos = d.overall_gain >= 0;
+  document.getElementById('summary').innerHTML = [
+    ['Total Value', `$${d.total_value.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--text)'],
+    ['Cash', `$${d.balance.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--accent)'],
+    ['Invested', `$${d.invested_value.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'var(--text)'],
+    ['Total Gain', `${gPos?'+':''}$${d.overall_gain.toLocaleString('en-US',{minimumFractionDigits:2})}`, gPos?'var(--green)':'var(--red)'],
+    ['Return', `${gPos?'+':''}${d.overall_gain_pct}%`, gPos?'var(--green)':'var(--red)'],
+  ].map(([l,v,c])=>`<div class="sum-card"><div class="sum-label">${l}</div><div class="sum-val" style="color:${c}">${v}</div></div>`).join('');
+
+  if (!d.holdings.length) {
+    document.getElementById('holdingsWrap').innerHTML = `<div style="padding:60px;text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--text2)"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-weight:700;margin-bottom:6px">No holdings yet</div><a href="/stocks/" style="display:inline-block;margin-top:12px;padding:10px 24px;background:var(--accent2);color:#fff;border-radius:8px;font-weight:700;text-decoration:none">Browse Stocks →</a></div>`;
+    return;
+  }
+
+  document.getElementById('holdingsWrap').innerHTML = `<div style="overflow-x:auto"><table>
+    <thead><tr>${['Ticker','Shares','Avg Cost','Current','Market Value','Gain/Loss','%'].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${d.holdings.map(h=>{
+      const pos = h.gain_loss >= 0;
+      const c = pos?'var(--green)':'var(--red)';
+      return `<tr onclick="window.location='/stocks/stock/${h.ticker}/'">
+        <td><span style="font-weight:700;background:var(--bg3);padding:3px 8px;border-radius:5px">${h.ticker}</span></td>
+        <td>${h.shares}</td><td>$${h.avg_price.toFixed(2)}</td><td>$${h.current_price.toFixed(2)}</td>
+        <td style="font-weight:700">$${h.market_value.toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+        <td style="color:${c}">${pos?'+':''}$${h.gain_loss.toFixed(2)}</td>
+        <td style="color:${c}">${pos?'+':''}${h.gain_loss_pct}%</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+});
+</script>
+{% endblock %}

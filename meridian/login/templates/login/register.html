@@ -1,0 +1,18 @@
+{% extends "login/base.html" %}
+{% block content %}
+<div class="card">
+  <div class="logo"><div class="dot"></div> Meridian</div>
+  <h2>Create account</h2>
+  <p class="sub">You'll start with $100,000 in virtual cash.</p>
+  <form method="POST">
+    {% csrf_token %}
+    <label>Username</label>
+    <input type="text" name="username" autofocus required>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button class="btn" type="submit">Get Started</button>
+  </form>
+  <div class="switch">Already have an account? <a href="/login/">Sign in</a></div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "stocks/base.html" %}
+{% block nav_history %}active{% endblock %}
+{% block content %}
+<style>
+  .badge { padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; font-family:var(--font-mono); }
+  .badge-buy { background:rgba(63,185,80,0.1); color:var(--green); border:1px solid rgba(63,185,80,0.3); }
+  .badge-sell { background:rgba(248,81,73,0.1); color:var(--red); border:1px solid rgba(248,81,73,0.3); }
+  .td-base { padding:13px 16px; font-family:var(--font-mono); font-size:13px; border-bottom:1px solid var(--border); }
+  .td-bold { font-weight:700; }
+  .td-muted { color:var(--text2); font-size:12px; }
+  .positive { color:var(--green); }
+  .negative { color:var(--red); }
+  th { padding:12px 16px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); text-align:left; background:var(--bg3); border-bottom:1px solid var(--border); }
+  tr:hover td { background:var(--bg3); }
+</style>
+
+<div class="animate-in">
+  <h1 style="font-weight:800;font-size:28px;letter-spacing:-0.5px;margin-bottom:4px">Transaction History</h1>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">All your buys and sells.</p>
+
+  {% if transactions %}
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Ticker</th>
+          <th>Shares</th>
+          <th>Price</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td class="td-base td-muted">{{ t.created_at|date:"M d, H:i" }}</td>
+          <td class="td-base">
+            <span class="badge {% if t.action == 'BUY' %}badge-buy{% else %}badge-sell{% endif %}">
+              {{ t.action }}
+            </span>
+          </td>
+          <td class="td-base td-bold">{{ t.ticker }}</td>
+          <td class="td-base">{{ t.shares }}</td>
+          <td class="td-base">${{ t.price }}</td>
+          <td class="td-base td-bold {% if t.action == 'BUY' %}negative{% else %}positive{% endif %}">
+            {% if t.action == 'BUY' %}-{% else %}+{% endif %}${{ t.total }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div style="padding:60px;text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--text2)">
+    <div style="font-size:36px;margin-bottom:10px">📜</div>
+    <div style="font-weight:700;margin-bottom:6px">No transactions yet</div>
+    <div style="font-size:14px">Make your first trade to see your history here.</div>
+    <a href="/stocks/" style="display:inline-block;margin-top:16px;padding:10px 24px;background:var(--accent2);color:#fff;border-radius:8px;font-weight:700;text-decoration:none">Browse Stocks →</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
