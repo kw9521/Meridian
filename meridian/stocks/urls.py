@@ -9,7 +9,7 @@ urlpatterns = [
 
     # API
     path('api/stock/<str:ticker>/', views.api_stock, name='api_stock'),
-    path('api/search/<str:ticker>/', views.api_search, name='api_search'),
+    path('api/search/<str:query>/', views.api_search, name='api_search'),
     path('api/portfolio/', views.api_portfolio, name='api_portfolio'),
     path('api/buy/', views.api_buy, name='api_buy'),
     path('api/sell/', views.api_sell, name='api_sell'),

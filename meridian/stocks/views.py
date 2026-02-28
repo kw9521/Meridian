@@ -49,7 +49,50 @@ def portfolio_view(request):
 @login_required
 def transactions_view(request):
     txns = Transaction.objects.filter(user=request.user).order_by('-created_at')[:50]
-    return render(request, 'stocks/transactions.html', {'transactions': txns})
+    profile = Profile.objects.get(user=request.user)
+    
+    # Calculate summary stats
+    total_spent = sum(t.total for t in txns if t.action == 'BUY')
+    total_received = sum(t.total for t in txns if t.action == 'SELL')
+    net = round(total_received - total_spent, 2)
+    total_trades = txns.count()
+    buy_count = sum(1 for t in txns if t.action == 'BUY')
+    sell_count = sum(1 for t in txns if t.action == 'SELL')
+
+    # Best and worst single trade
+    sell_txns = [t for t in txns if t.action == 'SELL']
+    best_trade = None
+    worst_trade = None
+
+    if sell_txns:
+        # For each sell, find the avg buy price for that ticker to compute gain
+        trade_gains = []
+        for t in sell_txns:
+            buys = Transaction.objects.filter(
+                user=request.user, ticker=t.ticker, action='BUY',
+                created_at__lte=t.created_at
+            )
+            if buys.exists():
+                avg_buy = sum(b.price for b in buys) / buys.count()
+                gain = round((t.price - avg_buy) * t.shares, 2)
+                trade_gains.append((t, gain))
+        if trade_gains:
+            best_trade = max(trade_gains, key=lambda x: x[1])
+            worst_trade = min(trade_gains, key=lambda x: x[1])
+
+    context = {
+        'transactions': txns,
+        'total_spent': round(total_spent, 2),
+        'total_received': round(total_received, 2),
+        'net': net,
+        'total_trades': total_trades,
+        'buy_count': buy_count,
+        'sell_count': sell_count,
+        'best_trade': best_trade,
+        'worst_trade': worst_trade,
+    }
+    return render(request, 'stocks/transactions.html', context)
+
 
 # ── API endpoints ──────────────────────────────────────
 
@@ -94,20 +137,103 @@ def api_stock(request, ticker):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+# dict to map company name to their ticker for search bar
+COMPANY_NAME_MAP = {
+    'apple': 'AAPL',
+    'microsoft': 'MSFT',
+    'google': 'GOOGL',
+    'alphabet': 'GOOGL',
+    'amazon': 'AMZN',
+    'tesla': 'TSLA',
+    'nvidia': 'NVDA',
+    'meta': 'META',
+    'facebook': 'META',
+    'netflix': 'NFLX',
+    'spotify': 'SPOT',
+    'uber': 'UBER',
+    'lyft': 'LYFT',
+    'airbnb': 'ABNB',
+    'paypal': 'PYPL',
+    'visa': 'V',
+    'mastercard': 'MA',
+    'jpmorgan': 'JPM',
+    'jp morgan': 'JPM',
+    'goldman sachs': 'GS',
+    'bank of america': 'BAC',
+    'disney': 'DIS',
+    'walmart': 'WMT',
+    'target': 'TGT',
+    'nike': 'NKE',
+    'coca cola': 'KO',
+    'cocacola': 'KO',
+    'pepsi': 'PEP',
+    'pepsico': 'PEP',
+    'mcdonalds': 'MCD',
+    "mcdonald's": 'MCD',
+    'starbucks': 'SBUX',
+    'intel': 'INTC',
+    'amd': 'AMD',
+    'advanced micro devices': 'AMD',
+    'qualcomm': 'QCOM',
+    'salesforce': 'CRM',
+    'oracle': 'ORCL',
+    'adobe': 'ADBE',
+    'zoom': 'ZM',
+    'shopify': 'SHOP',
+    'twitter': 'TWTR',
+    'snapchat': 'SNAP',
+    'snap': 'SNAP',
+    'coinbase': 'COIN',
+    'robinhood': 'HOOD',
+    'palantir': 'PLTR',
+    'spy': 'SPY',
+    's&p 500': 'SPY',
+    'sp500': 'SPY',
+    'boeing': 'BA',
+    'ford': 'F',
+    'gm': 'GM',
+    'general motors': 'GM',
+    'exxon': 'XOM',
+    'chevron': 'CVX',
+    'johnson and johnson': 'JNJ',
+    'johnson & johnson': 'JNJ',
+    'pfizer': 'PFE',
+    'moderna': 'MRNA',
+    'at&t': 'T',
+    'att': 'T',
+    'verizon': 'VZ',
+    'comcast': 'CMCSA',
+    'berkshire': 'BRK-B',
+    'berkshire hathaway': 'BRK-B',
+}
+
 @login_required
-def api_search(request, ticker):
+def api_search(request, query):
     try:
-        stock = yf.Ticker(ticker.upper())
+        # First check if the query matches a company name
+        normalized = query.lower().strip()
+        ticker = COMPANY_NAME_MAP.get(normalized, query.upper())
+
+        stock = yf.Ticker(ticker)
         history = stock.history(period='5d')
         info = stock.info
+
         if history.empty or not info.get('longName'):
             return JsonResponse({'error': 'Not found'}, status=404)
+
         current = round(history['Close'].iloc[-1], 2)
         prev = round(history['Close'].iloc[-2], 2) if len(history) > 1 else current
         change_pct = round(((current - prev) / prev) * 100, 2)
-        return JsonResponse({'ticker': ticker.upper(), 'name': info.get('longName'), 'current_price': current, 'change_pct': change_pct})
+
+        return JsonResponse({
+            'ticker': ticker,
+            'name': info.get('longName'),
+            'current_price': current,
+            'change_pct': change_pct,
+        })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
 
 @login_required
 def api_portfolio(request):

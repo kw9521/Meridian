@@ -12,13 +12,101 @@
   .negative { color:var(--red); }
   th { padding:12px 16px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); text-align:left; background:var(--bg3); border-bottom:1px solid var(--border); }
   tr:hover td { background:var(--bg3); }
+  .sum-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
+  .sum-label { font-size:11px; color:var(--text3); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .sum-val { font-family:var(--font-mono); font-weight:700; font-size:22px; }
+  .highlight-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
 </style>
 
 <div class="animate-in">
   <h1 style="font-weight:800;font-size:28px;letter-spacing:-0.5px;margin-bottom:4px">Transaction History</h1>
-  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">All your buys and sells.</p>
+  <p style="color:var(--text2);font-size:14px;margin-bottom:24px">A full breakdown of your trading activity.</p>
 
   {% if transactions %}
+
+  <!-- Summary Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+
+    <div class="sum-card">
+      <div class="sum-label">Net Gain / Loss</div>
+      <div class="sum-val {% if net >= 0 %}positive{% else %}negative{% endif %}">
+        {% if net >= 0 %}+{% endif %}${{ net }}
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;font-family:var(--font-mono)">
+        from realized trades
+      </div>
+    </div>
+
+    <div class="sum-card">
+      <div class="sum-label">Total Spent</div>
+      <div class="sum-val negative">-${{ total_spent }}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;font-family:var(--font-mono)">across {{ buy_count }} buy{{ buy_count|pluralize }}</div>
+    </div>
+
+    <div class="sum-card">
+      <div class="sum-label">Total Received</div>
+      <div class="sum-val positive">+${{ total_received }}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;font-family:var(--font-mono)">across {{ sell_count }} sell{{ sell_count|pluralize }}</div>
+    </div>
+
+    <div class="sum-card">
+      <div class="sum-label">Total Trades</div>
+      <div class="sum-val" style="color:var(--accent)">{{ total_trades }}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;font-family:var(--font-mono)">{{ buy_count }} buys · {{ sell_count }} sells</div>
+    </div>
+
+  </div>
+
+  <!-- Best / Worst Trade -->
+  {% if best_trade or worst_trade %}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+
+    {% if best_trade %}
+    <div class="highlight-card" style="border-color:rgba(63,185,80,0.3)">
+      <div style="font-size:11px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">
+        🏆 Best Trade
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-family:var(--font-mono);font-weight:700;font-size:18px">{{ best_trade.0.ticker }}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">{{ best_trade.0.shares }} shares sold @ ${{ best_trade.0.price }}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">{{ best_trade.0.created_at|date:"M d, Y" }}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-mono);font-weight:700;font-size:20px;color:var(--green)">
+            +${{ best_trade.1 }}
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">realized gain</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if worst_trade %}
+    <div class="highlight-card" style="border-color:rgba(248,81,73,0.3)">
+      <div style="font-size:11px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px">
+        📉 Worst Trade
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-family:var(--font-mono);font-weight:700;font-size:18px">{{ worst_trade.0.ticker }}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:3px">{{ worst_trade.0.shares }} shares sold @ ${{ worst_trade.0.price }}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">{{ worst_trade.0.created_at|date:"M d, Y" }}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-mono);font-weight:700;font-size:20px;color:var(--red)">
+            {% if worst_trade.1 >= 0 %}+{% endif %}${{ worst_trade.1 }}
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">realized gain</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  <!-- Transaction Table -->
   <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <thead>
@@ -27,14 +115,18 @@
           <th>Action</th>
           <th>Ticker</th>
           <th>Shares</th>
-          <th>Price</th>
-          <th>Total</th>
+          <th>Price Per Share</th>
+          <th>Total Value</th>
+          <th>Cash Impact</th>
         </tr>
       </thead>
       <tbody>
         {% for t in transactions %}
-        <tr>
-          <td class="td-base td-muted">{{ t.created_at|date:"M d, H:i" }}</td>
+        <tr onclick="window.location='/stocks/stock/{{ t.ticker }}/'" style="cursor:pointer">
+          <td class="td-base td-muted">
+            <div>{{ t.created_at|date:"M d, Y" }}</div>
+            <div style="font-size:11px;color:var(--text3)">{{ t.created_at|date:"H:i" }}</div>
+          </td>
           <td class="td-base">
             <span class="badge {% if t.action == 'BUY' %}badge-buy{% else %}badge-sell{% endif %}">
               {{ t.action }}
@@ -43,6 +135,7 @@
           <td class="td-base td-bold">{{ t.ticker }}</td>
           <td class="td-base">{{ t.shares }}</td>
           <td class="td-base">${{ t.price }}</td>
+          <td class="td-base td-bold">${{ t.total }}</td>
           <td class="td-base td-bold {% if t.action == 'BUY' %}negative{% else %}positive{% endif %}">
             {% if t.action == 'BUY' %}-{% else %}+{% endif %}${{ t.total }}
           </td>
