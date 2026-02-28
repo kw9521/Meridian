@@ -14,11 +14,73 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .stat-value {
     font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 700;
+  }
+  .tooltip-wrap {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .tooltip-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    font-size: 9px;
+    font-family: var(--font-mono);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    vertical-align: middle;
+    user-select: none;
+  }
+  .tooltip-icon:hover {
+    background: var(--accent2);
+    color: #fff;
+    border-color: var(--accent2);
+  }
+  .tooltip-box {
+    display: none;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    width: 200px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    z-index: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    font-family: var(--font-display);
+    font-weight: 400;
+    pointer-events: none;
+  }
+  .tooltip-box::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--border2);
+  }
+  .tooltip-wrap.active .tooltip-box {
+    display: block;
+    animation: fadeIn 0.15s ease;
   }
 </style>
 
@@ -105,14 +167,48 @@ fetch('/stocks/api/user/').then(r => r.json()).then(d => {
   updateTotal();
 });
 
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Tooltip Explanations ──────────────────────────────────────────
+const EXPLANATIONS = {
+  'Day Range': 'The lowest and highest price this stock traded at today.',
+  '52W Range': 'The lowest and highest price this stock has reached over the past 52 weeks (one year). Helps you see how today\'s price compares to its yearly performance.',
+  'Volume': 'How many shares have been bought and sold today. High volume means a lot of interest or activity in the stock.',
+  'Avg Volume': 'The average number of shares traded per day over the past 30 days. Comparing today\'s volume to this tells you if trading activity is unusually high or low.',
+  'Market Cap': 'The total value of a company — share price multiplied by total number of shares. Larger market cap generally means a bigger, more established company.',
+  'P/E Ratio': 'Price-to-Earnings ratio. Shows how much investors pay for every $1 of profit the company earns. A high P/E suggests investors expect strong future growth.',
+  'Dividend Yield': 'The percentage of the stock price paid to shareholders annually. E.g. a 2% yield on a $100 stock means you earn $2/year per share just for holding it.',
+  'Employees': 'The total number of full-time employees at this company.',
+  'Exchange': 'The stock exchange where this stock is listed. Common ones are NYSE (New York Stock Exchange) and NASDAQ.',
+};
+
+function toggleTooltip(e, el) {
+  e.stopPropagation();
+  document.querySelectorAll('.tooltip-wrap.active').forEach(t => {
+    if (t !== el) t.classList.remove('active');
+  });
+  el.classList.toggle('active');
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.tooltip-wrap.active').forEach(t => t.classList.remove('active'));
+});
+
+// ── Stat Box Builder ──────────────────────────────────────────────
 
 function statBox(label, value) {
+  const explanation = EXPLANATIONS[label];
+  const tooltipHtml = explanation
+    ? `<span class="tooltip-wrap" onclick="toggleTooltip(event, this)">
+        <span class="tooltip-icon">?</span>
+        <div class="tooltip-box">${explanation}</div>
+       </span>`
+    : '';
   return `<div class="stat-box">
-    <div class="stat-label">${label}</div>
+    <div class="stat-label">${label} ${tooltipHtml}</div>
     <div class="stat-value">${value}</div>
   </div>`;
 }
+
+// ── Helpers ───────────────────────────────────────────────────────
 
 function toggleDesc() {
   const el = document.getElementById('descText');
@@ -124,12 +220,10 @@ function toggleDesc() {
 }
 
 function fmt(n, decimals = 2) {
-  return n ? n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : 'N/A';
+  return n != null ? n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) : 'N/A';
 }
 
 // ── Load Stock ────────────────────────────────────────────────────
-
-
 
 async function loadStock(period = '3mo') {
   const res = await fetch(`/stocks/api/stock/${TICKER}/?period=${period}`);
@@ -143,7 +237,6 @@ async function loadStock(period = '3mo') {
   const pos = d.change_pct >= 0;
   const color = pos ? '#3fb950' : '#f85149';
 
-  // 52W progress bar position
   const progress = d.week_52_low && d.week_52_high
     ? Math.min(100, Math.max(0, ((d.current_price - d.week_52_low) / (d.week_52_high - d.week_52_low)) * 100)).toFixed(1)
     : null;
@@ -152,9 +245,9 @@ async function loadStock(period = '3mo') {
 
     <!-- Header -->
     <div style="padding:24px 24px 0">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
         <span style="font-family:var(--font-mono);font-size:12px;color:var(--text2);letter-spacing:2px">${TICKER}</span>
-        <span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">${d.sector || 'N/A'}</span>
+        ${d.sector ? `<span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">${d.sector}</span>` : ''}
         ${d.exchange ? `<span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">${d.exchange}</span>` : ''}
       </div>
       <div style="font-weight:800;font-size:24px;letter-spacing:-0.5px">${d.name}</div>
@@ -184,7 +277,6 @@ async function loadStock(period = '3mo') {
     <!-- Stats + Details -->
     <div style="border-top:1px solid var(--border);padding:20px 24px">
 
-      <!-- Stats Grid -->
       <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Key Statistics</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
         ${statBox('Day Range', d.day_low && d.day_high ? `$${d.day_low.toFixed(2)} — $${d.day_high.toFixed(2)}` : 'N/A')}
@@ -233,7 +325,6 @@ async function loadStock(period = '3mo') {
 
     </div>`;
 
-  // Update trade panel price
   document.getElementById('priceDisplay').textContent = `$${d.current_price.toFixed(2)}`;
   updateTotal();
 
@@ -279,7 +370,6 @@ async function loadStock(period = '3mo') {
     }
   });
 
-  // Start live simulation
   startSimulation();
 }
 
@@ -382,10 +472,8 @@ function getCookie(name) {
   return document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith(name + '='))?.split('=')[1] || '';
 }
 
-// Stop simulation when leaving page
 window.addEventListener('beforeunload', () => clearInterval(simulationInterval));
 
-// Kick everything off
 loadStock();
 </script>
 {% endblock %}
