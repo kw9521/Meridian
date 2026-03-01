@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'login',    # ← add this
     'stocks',   # ← add this
+    'leaderboard'
 ]
 
 MIDDLEWARE = [
