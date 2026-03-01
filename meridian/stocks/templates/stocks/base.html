@@ -6,6 +6,8 @@
   <title>Meridian</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'dropdown.css' %}">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -52,6 +54,14 @@
     <div class="nav-links">
       <a href="/stocks/" class="nav-link {% block nav_market %}{% endblock %}">Market</a>
       <a href="/stocks/portfolio/" class="nav-link {% block nav_portfolio %}{% endblock %}">Portfolio</a>
+      <div class="nav-dropdown">
+        <a href="#" class="nav-link dropdown-toggle">Learn</a>
+        <div class="dropdown-content">
+            <a href="{% url 'about' %}" class="dropdown-item {% block nav_about %}{% endblock %}">About Meridian</a>
+            {% comment %} <a href="{% url 'gettingStarted'}" 
+            class="dropdown-item {% block nav_getting_started %}{% endblock %}">Getting Started</a> {% endcomment %}
+        </div>
+      </div>
       <a href="/stocks/history/" class="nav-link {% block nav_history %}{% endblock %}">History</a>
       <a href="/leaderboard" class="nav-link {% block nav_leaderboard %}{% endblock %}">Leaderboard</a>
     </div>

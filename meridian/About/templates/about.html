@@ -1,0 +1,37 @@
+{% extends "stocks/base.html" %}
+{% block nav_about %}About{% endblock %}
+
+{% block title %}About Meridian{% endblock %}
+{% block content %}
+<div class="about-page" style="max-width: 900px; margin: 40px auto; padding: 0 20px; font-family: sans-serif;">
+    <h1 style="text-align: center; margin-bottom: 20px;">About Meridian</h1>
+
+    <p style="font-size: 1.1rem; line-height: 1.6;">
+        Welcome to <strong>Meridian</strong>, your go-to platform for exploring stock market trends, tracking portfolios, and learning about investing.  
+        Our goal is to make investing in stocks more accessible, engaging, and fun for everyone, regardless of experience level!
+    </p>
+
+    <h2 style="margin-top: 30px;">Our Mission</h2>
+    <p style="font-size: 1.1rem; line-height: 1.6;">
+        At Meridian, we aim to provide you with a website to practice and learn investing with simulated funds. 
+        The insights you gain from your time with Meridian, will give you the skills to succeed in investigating with
+        the real stock market. Whether you're a beginner or an experienced investor, our platform gives you the tools to make informed decisions.
+    </p>
+
+    <h2 style="margin-top: 30px;">Our Team</h2>
+    <p style="font-size: 1.1rem; line-height: 1.6;">
+        We are a group of passionate developers from 
+        Rochester Institute of Technology participating in <strong>WiCHacks 2026!!</strong>.
+        <li><strong>Melanie<strong> is a Senior Computer Science Major.</li>
+        <li><strong>Kristin<strong> is a Senior New Media Interactive Development Major.</li>
+        <li><strong>Allison<strong> is a Senior Computer Science Major.</li>
+        Together, we have built Meridian to combine technology and finance education in an accessible 
+        user-friendly experience.
+    </p>
+{% load static %}
+    <div style="text-align: center; margin-top: 40px;">
+        <img src="{% static 'images/meridian_team.png' %}" alt="Meridian Team" style="max-width: 100%; height: auto; border-radius: 8px;">
+    </div>
+
+</div>
+{% endblock %}
