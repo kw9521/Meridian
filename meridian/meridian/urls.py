@@ -7,4 +7,5 @@ urlpatterns = [
     path('stocks/', include('stocks.urls')),
     path('leaderboard/', include('leaderboard.urls')),
     path('about/', include("About.urls")),
+    path('', include('gettingStarted.urls')),
 ]

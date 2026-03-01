@@ -13,12 +13,9 @@
     :root {
       --bg:#080c10;--bg2:#0d1117;--bg3:#141b24;--bg4:#1c2633;
       --border:#1e2d3d;--border2:#243447;
-
-      /* Accessible text colors — improved contrast */
       --text:#ffffff;
       --text2:#c9d1d9;
       --text3:#8b949e;
-
       --green:#3fb950;--green2:#238636;--green-glow:rgba(63,185,80,0.15);
       --red:#f85149;--red2:#da3633;--red-glow:rgba(248,81,73,0.15);
       --accent:#58a6ff;--accent2:#1f6feb;
@@ -30,6 +27,8 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 var(--green-glow)}50%{box-shadow:0 0 16px 4px var(--green-glow)}}
     .animate-in{animation:fadeIn 0.4s ease forwards}
+
+    /* ── Navbar ── */
     nav{background:rgba(8,12,16,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
     .nav-inner{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:24px;height:60px;}
     .logo{font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:8px;}
@@ -37,6 +36,22 @@
     .nav-links{display:flex;gap:4px;align-items:center;}
     .nav-link{padding:6px 14px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;border:none;background:transparent;color:var(--text2);text-decoration:none;transition:all 0.15s;}
     .nav-link:hover,.nav-link.active{background:var(--bg3);color:var(--text);}
+    .nav-link-highlight {
+      padding:6px 14px;
+      border-radius:6px;
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      border:1px solid rgba(63,185,80,0.4);
+      background:rgba(63,185,80,0.08);
+      color:var(--green);
+      text-decoration:none;
+      transition:all 0.15s;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .nav-link-highlight:hover{background:rgba(63,185,80,0.15);border-color:var(--green);}
     .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;}
     .balance-wrap{display:flex;flex-direction:column;align-items:flex-end;}
     .balance-label{font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;}
@@ -51,9 +66,77 @@
     main{max-width:1200px;margin:0 auto;padding:28px 20px;}
     .logout-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-display);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.15s;}
     .logout-btn:hover{background:var(--bg3);color:var(--text);}
+
+    /* ── Welcome Banner ── */
+    #welcomeBanner {
+      background: linear-gradient(135deg, #0d1f0f 0%, #0d1117 60%, #0a1628 100%);
+      border-bottom: 1px solid rgba(63,185,80,0.2);
+      padding: 20px;
+      display: none; /* shown via JS for new users */
+      animation: fadeIn 0.5s ease;
+    }
+    .welcome-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .welcome-emoji { font-size: 28px; flex-shrink: 0; }
+    .welcome-text { flex: 1; min-width: 200px; }
+    .welcome-text strong {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .welcome-text span {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+    .welcome-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+    .welcome-cta {
+      padding: 9px 20px;
+      border-radius: 8px;
+      background: var(--green2);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      box-shadow: 0 2px 12px rgba(63,185,80,0.25);
+    }
+    .welcome-cta:hover { opacity: 0.85; }
+    .welcome-skip {
+      font-size: 12px;
+      color: var(--text3);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font-mono);
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+    .welcome-skip:hover { color: var(--text2); }
+    .welcome-dismiss {
+      font-size: 18px;
+      color: var(--text3);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .welcome-dismiss:hover { background: var(--bg3); color: var(--text); }
   </style>
 </head>
 <body>
+
 <nav>
   <div class="nav-inner">
     <a href="/stocks/" class="logo"><div class="dot"></div>Meridian</a>
@@ -64,35 +147,64 @@
         <a href="#" class="nav-link dropdown-toggle">Learn</a>
         <div class="dropdown-content">
           <a href="{% url 'about' %}" class="dropdown-item {% block nav_about %}{% endblock %}">About Meridian</a>
-          {% comment %} <a href="{% url 'gettingStarted' %}" class="dropdown-item {% block nav_getting_started %}{% endblock %}">Getting Started</a> {% endcomment %}
+          <a href="{% url 'gettingStarted' %}" class="dropdown-item {% block nav_getting_started %}{% endblock %}">Getting Started</a>
         </div>
       </div>
       <a href="/stocks/history/" class="nav-link {% block nav_history %}{% endblock %}">History</a>
       <a href="/leaderboard" class="nav-link {% block nav_leaderboard %}{% endblock %}">Leaderboard</a>
+
+      <!-- Highlighted Getting Started link -->
+      <a href="{% url 'gettingStarted' %}" class="nav-link-highlight {% block nav_gs %}{% endblock %}">
+        <span>📚</span> New? Start Here
+      </a>
     </div>
     <div class="nav-right">
       <div class="search-wrap">
         <input class="search-input" id="searchInput" placeholder="Search company or ticker...">
         <div class="search-drop" id="searchDrop"></div>
       </div>
-      <div class="balance-wrap">
-        <span class="balance-label">Cash</span>
-        <span class="balance-val" id="navBalance">—</span>
-      </div>
       <a href="/logout/" class="logout-btn">Sign out</a>
     </div>
   </div>
 </nav>
+
+<!-- Welcome Banner (shown to users who haven't dismissed it) -->
+<div id="welcomeBanner">
+  <div class="welcome-inner">
+    <div class="welcome-emoji">👋</div>
+    <div class="welcome-text">
+      <strong>New to investing? You're in the right place.</strong>
+      <span>Meridian gives you $100,000 in virtual cash to practice trading real stocks — completely risk-free. Before you dive in, we recommend reading our beginner's guide.</span>
+    </div>
+    <div class="welcome-actions">
+      <a href="{% url 'gettingStarted' %}" class="welcome-cta">📚 Read the Guide →</a>
+      <button class="welcome-skip" onclick="dismissBanner()">Skip for now</button>
+      <button class="welcome-dismiss" onclick="dismissBanner()" title="Dismiss">✕</button>
+    </div>
+  </div>
+</div>
+
 <main>
   {% block content %}{% endblock %}
 </main>
+
 <script>
-  // Load balance
+  // ── Balance ───────────────────────────────────────────────────
   fetch('/stocks/api/user/').then(r=>r.json()).then(d=>{
     document.getElementById('navBalance').textContent = '$' + d.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   });
 
-  // Search
+  // ── Welcome Banner ────────────────────────────────────────────
+  // Show banner unless user has dismissed it before
+  if (!localStorage.getItem('meridian_banner_dismissed')) {
+    document.getElementById('welcomeBanner').style.display = 'block';
+  }
+  function dismissBanner() {
+    document.getElementById('welcomeBanner').style.display = 'none';
+    localStorage.setItem('meridian_banner_dismissed', '1');
+  }
+
+  // ── Search ────────────────────────────────────────────────────
   let searchTimer;
   const inp = document.getElementById('searchInput');
   const drop = document.getElementById('searchDrop');
