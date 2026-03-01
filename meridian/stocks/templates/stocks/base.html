@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{% static 'base.css' %}">
 </head>
 <body>
+
 <nav>
   <div class="nav-inner">
     <a href="/stocks/" class="logo"><div class="dot"></div>Meridian</a>
@@ -38,16 +39,56 @@
     </div>
   </div>
 </nav>
+
+<!-- Welcome Banner -->
+<div id="welcomeBanner" class="welcome-banner">
+  <div class="welcome-inner">
+    
+    <div class="welcome-left">
+      <div class="welcome-emoji">👋</div>
+      <div class="welcome-text">
+        <div class="welcome-title">
+          New to investing? You're in the right place.
+        </div>
+        <div class="welcome-sub">
+          Meridian gives you <strong>$100,000 in virtual cash</strong> to practice trading real stocks — completely risk-free.
+          Before you dive in, we recommend reading our beginner's guide.
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-actions">
+      <a href="{% url 'gettingStarted' %}" class="welcome-cta">
+        📚 Read the Guide →
+      </a>
+      <button class="welcome-skip">Skip for now</button>
+      <button class="welcome-dismiss" title="Dismiss">✕</button>
+    </div>
+
+  </div>
+</div>
+
 <main>
   {% block content %}{% endblock %}
 </main>
+
 <script>
-  // Load balance
+  // ── Balance ───────────────────────────────────────────────────
   fetch('/stocks/api/user/').then(r=>r.json()).then(d=>{
     document.getElementById('navBalance').textContent = '$' + d.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   });
 
-  // Search
+  // ── Welcome Banner ────────────────────────────────────────────
+  // // Show banner unless user has dismissed it before
+  // if (!localStorage.getItem('meridian_banner_dismissed')) {
+  //   document.getElementById('welcomeBanner').style.display = 'block';
+  // }
+  // function dismissBanner() {
+  //   document.getElementById('welcomeBanner').style.display = 'none';
+  //   localStorage.setItem('meridian_banner_dismissed', '1');
+  // }
+
+  // ── Search ────────────────────────────────────────────────────
   let searchTimer;
   const inp = document.getElementById('searchInput');
   const drop = document.getElementById('searchDrop');
