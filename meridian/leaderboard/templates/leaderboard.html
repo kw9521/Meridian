@@ -1,0 +1,32 @@
+{% extends "stocks/base.html" %}
+{% block nav_leaderboard %}Leaderboard{% endblock %}
+{% block content%}
+{% load static %}
+<link rel="stylesheet" href="{% static 'leaderboard.css' %}">
+<body>
+    <h1>Leaderboard</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in top_entries %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ entry.profile.user }}</td>
+                <td>{{ entry.profile.balance }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No entries yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+{% endblock %}
