@@ -3,9 +3,9 @@
 {% block content %}
 <div class="animate-in">
   <div style="margin-bottom:32px">
-    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Paper Trading Simulator</div>
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Paper Trading Simulator</div>
     <h1 style="font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1.1">Learn to invest.<br><span style="color:var(--green)">Risk nothing.</span></h1>
-    <p style="color:var(--text2);margin-top:10px;font-size:15px">You start with $100,000 in virtual cash. Trade real stocks with real data.</p>
+    <p style="color:var(--text);margin-top:10px;font-size:15px">You start with $100,000 in virtual cash. Trade real stocks with real data.</p>
   </div>
   <div style="font-weight:700;font-size:18px;margin-bottom:16px">Popular Stocks</div>
   <div id="stockGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px"></div>
@@ -15,7 +15,7 @@
   .stock-card:hover{transform:translateY(-2px);}
   .card-glow{position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;filter:blur(30px);transform:translate(20px,-20px);}
   .card-ticker{font-family:var(--font-mono);font-weight:700;font-size:17px;letter-spacing:1px;}
-  .card-name{font-size:12px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-name{font-size:12px;color:var(--text);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .card-price{font-family:var(--font-mono);font-size:24px;font-weight:700;margin-top:16px;}
   .skeleton{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;height:120px;animation:pulse 1.5s ease infinite;}
 </style>
@@ -46,7 +46,7 @@ TICKERS.forEach(async ticker => {
         <div class="card-price">$${d.current_price.toLocaleString()}</div>
         <div style="font-family:var(--font-mono);font-size:13px;color:${color};margin-top:4px;display:flex;align-items:center;gap:4px">
           <span>${pos?'▲':'▼'}</span><span>${Math.abs(d.change_pct)}%</span>
-          <span style="color:var(--text3);font-size:11px;margin-left:4px">today</span>
+          <span style="color:var(--text);font-size:11px;margin-left:4px">today</span>
         </div>
       </div>
     </div>`;
