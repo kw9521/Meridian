@@ -10,7 +10,11 @@
   <link rel="stylesheet" href="{% static 'base.css' %}">
   <script type="text/javascript">
   function googleTranslateElementInit() {
-    new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+      var userLang = navigator.language || navigator.userLanguage; // e.g. "fr", "es-US"
+      userLang = userLang.split('-')[0]; 
+      new google.translate.TranslateElement({
+          pageLanguage: userLang
+      }, 'google_translate_element');
   }
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>

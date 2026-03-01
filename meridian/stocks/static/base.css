@@ -189,7 +189,7 @@ nav {
     padding: 7px 12px;
     color: var(--text);
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: 12px;
     width: 250px;
     outline: none;
     transition: border-color 0.2s;
