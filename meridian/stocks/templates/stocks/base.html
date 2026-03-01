@@ -86,14 +86,43 @@
   });
 
   // ── Welcome Banner ────────────────────────────────────────────
-  // // Show banner unless user has dismissed it before
-  // if (!localStorage.getItem('meridian_banner_dismissed')) {
-  //   document.getElementById('welcomeBanner').style.display = 'block';
-  // }
-  // function dismissBanner() {
-  //   document.getElementById('welcomeBanner').style.display = 'none';
-  //   localStorage.setItem('meridian_banner_dismissed', '1');
-  // }
+document.addEventListener("DOMContentLoaded", function() {
+  const banner = document.getElementById('welcomeBanner');
+  const skipBtn = document.querySelector('.welcome-skip');
+  const dismissBtn = document.querySelector('.welcome-dismiss');
+
+  if (!localStorage.getItem('meridian_banner_dismissed')) {
+    banner.style.display = 'block';
+  }
+
+  function hideBanner() {
+    banner.style.display = 'none';
+    localStorage.setItem('meridian_banner_dismissed', '1');
+  }
+
+  skipBtn.addEventListener('click', hideBanner);
+  dismissBtn.addEventListener('click', hideBanner);
+});
+  {% comment %} const banner = document.getElementById('welcomeBanner');
+  const skipBtn = document.querySelector('.welcome-skip');
+  const dismissBtn = document.querySelector('.welcome-dismiss');
+
+  // Hide banner function
+  function hideBanner() {
+    banner.style.display = 'none';
+    localStorage.setItem('meridian_banner_dismissed', '1');
+  }
+  // Show banner unless user has dismissed it before
+  if (!localStorage.getItem('meridian_banner_dismissed')) {
+      document.getElementById('welcomeBanner').style.display = 'block';
+  }
+  function dismissBanner() {
+    document.getElementById('welcomeBanner').style.display = 'none';
+    localStorage.setItem('meridian_banner_dismissed', '1');
+  }   {% endcomment %}
+  {% comment %} // Button listeners
+  skipBtn.addEventListener('click', hideBanner);
+  dismissBtn.addEventListener('click', hideBanner); {% endcomment %}
 
   // ── Search ────────────────────────────────────────────────────
   let searchTimer;
