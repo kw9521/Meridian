@@ -1,77 +1,119 @@
 {% extends "stocks/base.html" %}
 {% block nav_market %}active{% endblock %}
+
 {% block content %}
-<div class="animate-in">
+<main class="animate-in">
 
-  <!-- Hero -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:36px">
+  <!-- ───────── HERO ───────── -->
+  <section aria-labelledby="hero-heading"
+           style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:36px">
 
-    <!-- Left: headline -->
+    <!-- Left -->
     <div>
       <div style="font-family:var(--font-mono);
-            font-size:13px;
-            color:var(--green);
-            text-transform:uppercase;
-            letter-spacing:1.5px;
-            margin-bottom:10px;
-            font-weight:600;">
-      Paper Trading Simulator
-    </div>
-      <h1 style="font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px">
+                  font-size:13px;
+                  color:var(--green);
+                  text-transform:uppercase;
+                  letter-spacing:1.5px;
+                  margin-bottom:10px;
+                  font-weight:600;">
+        Paper Trading Simulator
+      </div>
+
+      <h1 id="hero-heading"
+          style="font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px">
         Learn to invest.<br>
         <span style="color:var(--green)">Risk nothing.</span>
       </h1>
+
       <p style="color:var(--text2);font-size:18px;max-width:480px;line-height:1.6">
         You start with $100,000 in virtual cash. Trade real stocks with real data.
       </p>
     </div>
 
-    <!-- Right: cash balance card -->
-    <div style="background:var(--bg2);border:1px solid rgba(63,185,80,0.25);border-radius:14px;padding:20px 28px;text-align:right;flex-shrink:0;box-shadow:0 0 32px rgba(63,185,80,0.06)">
-      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Available Cash</div>
-      <div id="heroBalance" style="font-family:var(--font-mono);font-size:32px;font-weight:700;color:var(--green);line-height:1">—</div>
-      <div id="heroBalanceSub" style="font-size:12px;color:var(--text2);margin-top:6px;font-family:var(--font-mono)">loading...</div>
-    </div>
+    <!-- Right: Balance Card -->
+    <div style="background:var(--bg2);
+                border:1px solid rgba(63,185,80,0.25);
+                border-radius:14px;
+                padding:20px 28px;
+                text-align:right;
+                flex-shrink:0;
+                box-shadow:0 0 32px rgba(63,185,80,0.06)">
 
-  </div>
+      <div style="font-family:var(--font-mono);
+                  font-size:11px;
+                  color:var(--text3);
+                  text-transform:uppercase;
+                  letter-spacing:1px;
+                  margin-bottom:6px">
+        Available Cash
+      </div>
 
+      <div id="heroBalance"
+           aria-live="polite"
+           style="font-family:var(--font-mono);
+                  font-size:32px;
+                  font-weight:700;
+                  color:var(--green);
+                  line-height:1">
+        Loading balance...
+      </div>
 
-  <!-- Beginner Section -->
-<div style="margin:40px 0 48px 0">
-  <div style="font-weight:700;font-size:20px;margin-bottom:16px">
-    New to investing?
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
-
-    <div style="background:var(--bg2);border:1px solid var(--border);
-                border-radius:12px;padding:18px">
-      <div style="font-weight:600;margin-bottom:6px">📘 What is a Stock?</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.5">
-        Learn what ownership means, how shares work, and why companies go public.
+      <div id="heroBalanceSub"
+           aria-live="polite"
+           style="font-size:12px;
+                  color:var(--text2);
+                  margin-top:6px;
+                  font-family:var(--font-mono)">
       </div>
     </div>
+  </section>
 
-    <div style="background:var(--bg2);border:1px solid var(--border);
-                border-radius:12px;padding:18px">
-      <div style="font-weight:600;margin-bottom:6px">📊 How the Market Works</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.5">
-        Understand supply & demand, price movement, volatility, and risk.
-      </div>
-    </div>
 
-    <div style="background:var(--bg2);border:1px solid var(--border);
-                border-radius:12px;padding:18px">
-      <div style="font-weight:600;margin-bottom:6px">💰 How to Read a Stock Page</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.5">
-        Learn what price, change %, volume, and charts actually mean.
-      </div>
+  <!-- ───────── BEGINNER SECTION ───────── -->
+  <section aria-labelledby="beginner-heading" style="margin:40px 0 48px 0">
+
+    <h2 id="beginner-heading"
+        style="font-weight:700;font-size:20px;margin-bottom:16px">
+      New to investing?
+    </h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+
+      <article style="background:var(--bg2);border:1px solid var(--border);
+                      border-radius:12px;padding:18px">
+        <h3 style="font-weight:600;margin-bottom:6px">
+          <span aria-hidden="true">📘</span> What is a Stock?
+        </h3>
+        <p style="font-size:14px;color:var(--text2);line-height:1.5">
+          Learn what ownership means, how shares work, and why companies go public.
+        </p>
+      </article>
+
+      <article style="background:var(--bg2);border:1px solid var(--border);
+                      border-radius:12px;padding:18px">
+        <h3 style="font-weight:600;margin-bottom:6px">
+          <span aria-hidden="true">📊</span> How the Market Works
+        </h3>
+        <p style="font-size:14px;color:var(--text2);line-height:1.5">
+          Understand supply and demand, price movement, volatility, and risk.
+        </p>
+      </article>
+
+      <article style="background:var(--bg2);border:1px solid var(--border);
+                      border-radius:12px;padding:18px">
+        <h3 style="font-weight:600;margin-bottom:6px">
+          <span aria-hidden="true">💰</span> How to Read a Stock Page
+        </h3>
+        <p style="font-size:14px;color:var(--text2);line-height:1.5">
+          Learn what price, change percentage, volume, and charts actually mean.
+        </p>
+      </article>
     </div>
 
     <div style="margin-top:24px;text-align:center">
       <a href="/getting-started/"
-        style="
-                background:var(--green);
+         style="background:var(--green);
                 color:#000;
                 padding:14px 26px;
                 border-radius:10px;
@@ -79,83 +121,150 @@
                 font-size:16px;
                 text-decoration:none;
                 display:inline-block;
-                box-shadow:0 0 20px rgba(63,185,80,0.2);
-                ">
-        🚀 New? Start Here
+                box-shadow:0 0 20px rgba(63,185,80,0.2);">
+        <span aria-hidden="true">🚀</span> New? Start Here
       </a>
     </div>
-  </div>
-</div>
+  </section>
 
-  <!-- Popular Stocks -->
-  <div id="popular" style="margin-top:24px">
-  <div style="font-weight:700;font-size:20px;margin-bottom:6px">
-    Popular Stocks
-  </div>
-  <div style="font-size:16px;color:var(--text2);margin-bottom:16px">
-    These are widely traded companies. Click one to explore how real market data looks.
-  </div>
-</div>
-  <div id="stockGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px"></div>
-</div>
+
+  <!-- ───────── POPULAR STOCKS ───────── -->
+  <section aria-labelledby="popular-heading" style="margin-top:24px">
+
+    <h2 id="popular-heading"
+        style="font-weight:700;font-size:20px;margin-bottom:6px">
+      Popular Stocks
+    </h2>
+
+    <p style="font-size:16px;color:var(--text2);margin-bottom:16px">
+      These are widely traded companies. Click one to explore how real market data looks.
+    </p>
+
+    <div id="stockGrid"
+         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px">
+    </div>
+  </section>
+
+</main>
+
 
 <style>
-  .stock-card{background:var(--bg2);border-radius:14px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
-  .stock-card:hover{transform:translateY(-2px);}
-  .card-glow{position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;filter:blur(30px);transform:translate(20px,-20px);}
-  .card-ticker{font-family:var(--font-mono);font-weight:700;font-size:17px;letter-spacing:1px;}
-  .card-name{font-size:12px;color:var(--text);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .card-price{font-family:var(--font-mono);font-size:24px;font-weight:700;margin-top:16px;}
-  .skeleton{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;height:120px;animation:pulse 1.5s ease infinite;}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  .stock-card {
+    background:var(--bg2);
+    border-radius:14px;
+    padding:20px;
+    display:block;
+    text-decoration:none;
+    color:inherit;
+    position:relative;
+    transition:all 0.2s;
+  }
+
+  .stock-card:hover {
+    transform:translateY(-2px);
+  }
+
+  .stock-card:focus {
+    outline:2px solid var(--green);
+    outline-offset:3px;
+  }
+
+  .card-glow {
+    position:absolute;
+    top:0;
+    right:0;
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    filter:blur(30px);
+    transform:translate(20px,-20px);
+  }
+
+  .card-ticker {
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:17px;
+    letter-spacing:1px;
+  }
+
+  .card-price {
+    font-family:var(--font-mono);
+    font-size:24px;
+    font-weight:700;
+    margin-top:16px;
+  }
 </style>
 
+
 <script>
-// ── Balance ───────────────────────────────────────────────────────
-fetch('/stocks/api/user/').then(r => r.json()).then(d => {
-  document.getElementById('heroBalance').textContent =
-    '$' + d.balance.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+// ───────── BALANCE ─────────
+fetch('/stocks/api/user/')
+  .then(r => r.json())
+  .then(d => {
+    const balanceEl = document.getElementById('heroBalance');
+    const subEl     = document.getElementById('heroBalanceSub');
 
-  const diff = d.balance - 100000;
-  const pos  = diff >= 0;
-  const sub  = document.getElementById('heroBalanceSub');
-  sub.textContent = `${pos ? '▲' : '▼'} ${pos ? '+' : ''}$${Math.abs(diff).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })} from start`;
-  sub.style.color = pos ? 'var(--green)' : 'var(--red)';
-});
+    balanceEl.textContent =
+      '$' + d.balance.toLocaleString('en-US', {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      });
 
-// ── Stock Grid ────────────────────────────────────────────────────
+    const diff = d.balance - 100000;
+    const pos  = diff >= 0;
+
+    subEl.textContent =
+      `${pos ? 'Up' : 'Down'} $${Math.abs(diff).toLocaleString('en-US', {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      })} from starting balance`;
+
+    subEl.style.color = pos ? 'var(--green)' : 'var(--red)';
+  });
+
+
+// ───────── STOCK GRID ─────────
 const TICKERS = ['AAPL','TSLA','NVDA','MSFT','AMZN','GOOGL','META','SPY'];
 const grid = document.getElementById('stockGrid');
-
-// Skeletons
-TICKERS.forEach(t => {
-  grid.innerHTML += `<div class="skeleton" id="sk-${t}"></div>`;
-});
 
 TICKERS.forEach(async ticker => {
   const res = await fetch(`/stocks/api/search/${ticker}/`);
   if (!res.ok) return;
   const d = await res.json();
   if (d.error) return;
-  const pos    = d.change_pct >= 0;
+
+  const pos = d.change_pct >= 0;
   const color  = pos ? 'var(--green)' : 'var(--red)';
   const glow   = pos ? 'rgba(63,185,80,0.15)' : 'rgba(248,81,73,0.15)';
   const border = pos ? 'rgba(63,185,80,0.2)'  : 'rgba(248,81,73,0.15)';
-  const el = document.getElementById(`sk-${ticker}`);
-  if (el) el.outerHTML = `
-    <div class="stock-card" style="border:1px solid ${border}" onclick="window.location='/stocks/stock/${ticker}/'">
-      <div class="card-glow" style="background:${glow}"></div>
-      <div style="position:relative">
-        <div class="card-ticker">${ticker}</div>
-        <div class="card-name">${d.name}</div>
-        <div class="card-price">$${d.current_price.toLocaleString()}</div>
-        <div style="font-family:var(--font-mono);font-size:13px;color:${color};margin-top:4px;display:flex;align-items:center;gap:4px">
-          <span>${pos?'▲':'▼'}</span><span>${Math.abs(d.change_pct)}%</span>
-          <span style="color:var(--text);font-size:11px;margin-left:4px">today</span>
-        </div>
-      </div>
-    </div>`;
-});
 
+  grid.innerHTML += `
+    <a href="/stocks/stock/${ticker}/"
+       class="stock-card"
+       style="border:1px solid ${border}"
+       aria-label="${d.name} stock. Current price $${d.current_price}. ${pos ? 'Up' : 'Down'} ${Math.abs(d.change_pct)} percent today">
+
+      <div class="card-glow" style="background:${glow}"></div>
+
+      <div class="card-ticker">${ticker}</div>
+      <div style="font-size:12px;color:var(--text);margin-top:3px">
+        ${d.name}
+      </div>
+
+      <div class="card-price">
+        $${d.current_price.toLocaleString()}
+      </div>
+
+      <div style="font-family:var(--font-mono);
+                  font-size:13px;
+                  color:${color};
+                  margin-top:4px;">
+        ${pos ? 'Up' : 'Down'} ${Math.abs(d.change_pct)}% today
+      </div>
+
+    </a>
+  `;
+});
 </script>
+
 {% endblock %}
