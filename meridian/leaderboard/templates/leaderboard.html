@@ -1,32 +1,192 @@
 {% extends "stocks/base.html" %}
-{% block nav_leaderboard %}Leaderboard{% endblock %}
-{% block content%}
+{% block nav_leaderboard %}active{% endblock %}
+{% block content %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'leaderboard.css' %}">
-<body>
-    <h1>Leaderboard</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Username</th>
-                <th>Balance</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in top_entries %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ entry.profile.user }}</td>
-                <td>{{ entry.profile.balance }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4">No entries yet.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+<style>
+  .trophy-gold   { color: #FFD700; }
+  .trophy-silver { color: #C0C0C0; }
+  .trophy-bronze { color: #CD7F32; }
+
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .rank-1 { background: rgba(255,215,0,0.15);  color: #FFD700; border: 1px solid rgba(255,215,0,0.4); }
+  .rank-2 { background: rgba(192,192,192,0.15); color: #C0C0C0; border: 1px solid rgba(192,192,192,0.4); }
+  .rank-3 { background: rgba(205,127,50,0.15);  color: #CD7F32; border: 1px solid rgba(205,127,50,0.4); }
+  .rank-other { background: var(--bg4); color: var(--text3); border: 1px solid var(--border); }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: var(--bg3); }
+
+  .lb-row.current-user {
+    background: rgba(88,166,255,0.05);
+    border-left: 3px solid var(--accent);
+  }
+  .lb-row.current-user:hover { background: rgba(88,166,255,0.1); }
+
+  .username {
+    flex: 1;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .you-badge {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .balance-col {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    text-align: right;
+  }
+  .gain-col {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    min-width: 80px;
+  }
+</style>
+
+<div class="animate-in">
+
+  <!-- Header -->
+  <div style="margin-bottom:28px">
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Global Rankings</div>
+    <h1 style="font-size:32px;font-weight:800;letter-spacing:-1px">Leaderboard</h1>
+    <p style="color:var(--text2);margin-top:8px;font-size:15px">Top traders ranked by current portfolio balance.</p>
+  </div>
+
+  <!-- Top 3 Podium -->
+  {% if top_entries|length >= 3 %}
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px">
+
+    <!-- 2nd place -->
+    <div style="background:var(--bg2);border:1px solid rgba(192,192,192,0.2);border-radius:12px;padding:20px;text-align:center;margin-top:20px">
+      <div style="font-size:28px;margin-bottom:8px">🥈</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:4px">{{ top_entries.1.profile.user }}</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#C0C0C0">${{ top_entries.1.score|floatformat:2 }}</div>
+    </div>
+
+    <!-- 1st place -->
+    <div style="background:var(--bg2);border:1px solid rgba(255,215,0,0.3);border-radius:12px;padding:24px;text-align:center;box-shadow:0 0 24px rgba(255,215,0,0.08)">
+      <div style="font-size:36px;margin-bottom:8px">🥇</div>
+      <div style="font-weight:800;font-size:18px;margin-bottom:4px">{{ top_entries.0.profile.user }}</div>
+      <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:#FFD700">${{ top_entries.0.score|floatformat:2 }}</div>
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:1px">Top Trader</div>
+    </div>
+
+    <!-- 3rd place -->
+    <div style="background:var(--bg2);border:1px solid rgba(205,127,50,0.2);border-radius:12px;padding:20px;text-align:center;margin-top:20px">
+      <div style="font-size:28px;margin-bottom:8px">🥉</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:4px">{{ top_entries.2.profile.user }}</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#CD7F32">${{ top_entries.2.score|floatformat:2 }}</div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- Full Rankings Table -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+
+    <!-- Table header -->
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--bg3);border-bottom:1px solid var(--border)">
+      <div style="width:32px;font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px">Rank</div>
+      <div style="flex:1;font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px">Trader</div>
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:right;min-width:80px">Gain / Loss</div>
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:right;min-width:120px">Balance</div>
+    </div>
+
+    {% for entry in top_entries %}
+    {% with rank=forloop.counter %}
+    <div class="lb-row {% if entry.profile.user == request.user %}current-user{% endif %}">
+
+      <!-- Rank badge -->
+      <div>
+        {% if rank == 1 %}
+          <div class="rank-badge rank-1">1</div>
+        {% elif rank == 2 %}
+          <div class="rank-badge rank-2">2</div>
+        {% elif rank == 3 %}
+          <div class="rank-badge rank-3">3</div>
+        {% else %}
+          <div class="rank-badge rank-other">{{ rank }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Username -->
+      <div class="username">
+        {{ entry.profile.user }}
+        {% if entry.profile.user == request.user %}
+          <span class="you-badge">You</span>
+        {% endif %}
+      </div>
+
+      <!-- Gain/Loss vs starting $100k -->
+      {% with gain=entry.score|add:"-100000" %}
+      <div class="gain-col">
+        {% if entry.score > 100000 %}
+          <span style="color:var(--green)">+${{ gain|floatformat:2 }}</span>
+        {% elif entry.score < 100000 %}
+          <span style="color:var(--red)">${{ gain|floatformat:2 }}</span>
+        {% else %}
+          <span style="color:var(--text3)">$0.00</span>
+        {% endif %}
+      </div>
+      {% endwith %}
+
+      <!-- Balance -->
+      <div class="balance-col">
+        {% if entry.score > 100000 %}
+          <span style="color:var(--green)">${{ entry.score|floatformat:2 }}</span>
+        {% elif entry.score < 100000 %}
+          <span style="color:var(--red)">${{ entry.score|floatformat:2 }}</span>
+        {% else %}
+          <span style="color:var(--text)">${{ entry.score|floatformat:2 }}</span>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div style="padding:60px;text-align:center;color:var(--text2)">
+      <div style="font-size:36px;margin-bottom:12px">📊</div>
+      <div style="font-weight:700;margin-bottom:6px">No traders yet</div>
+      <div style="font-size:14px">Be the first to make a trade and claim the top spot.</div>
+    </div>
+    {% endfor %}
+
+  </div>
+
+  <!-- Footer note -->
+  <div style="margin-top:16px;text-align:center;font-size:12px;color:var(--text3);font-family:var(--font-mono)">
+    Rankings update in real time · Starting balance $100,000.00
+  </div>
+
+</div>
 {% endblock %}
