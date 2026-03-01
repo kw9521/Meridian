@@ -1,17 +1,28 @@
-# ----------------------------
-# Python
-# ----------------------------
-__pycache__/
+# Environment & secrets
+.env
+.env.*
 
-# ----------------------------
 # Django
-# ----------------------------
 db.sqlite3
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+migrations/
 
-# ----------------------------
-# IDE / Editor
-# ----------------------------
+# Virtual environments
+venv/
+env/
+.venv/
+
+# macOS
+.DS_Store
+
+# VS Code
 .vscode/
-.idea/
-*.swp
-*.swo
+
+# Byte-compiled
+*.egg-info/
+dist/
+build/
