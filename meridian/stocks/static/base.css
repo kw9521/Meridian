@@ -264,6 +264,86 @@ main {
     flex: 1;
 }
 
+/* ── Welcome Banner ───────────────────────── */
+
+.welcome-banner {
+  background: linear-gradient(90deg, rgba(63,185,80,0.08), rgba(63,185,80,0.03));
+  border-bottom: 1px solid rgba(63,185,80,0.2);
+  padding: 18px 0;
+}
+
+.welcome-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.welcome-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.welcome-emoji {
+  font-size: 22px;
+}
+
+.welcome-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.welcome-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.welcome-sub {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-cta {
+  background: var(--green);
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.welcome-skip {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.welcome-dismiss {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
+}
+
 @media (max-width: 900px) {
 
     .menu-toggle {
@@ -307,4 +387,6 @@ main {
     .balance-wrap {
         align-items: flex-start;
     }
+
+    
 }

@@ -40,19 +40,31 @@
   </div>
 </nav>
 
-<!-- Welcome Banner (shown to users who haven't dismissed it) -->
-<div id="welcomeBanner">
+<!-- Welcome Banner -->
+<div id="welcomeBanner" class="welcome-banner">
   <div class="welcome-inner">
-    <div class="welcome-emoji">👋</div>
-    <div class="welcome-text">
-      <strong>New to investing? You're in the right place.</strong>
-      <span>Meridian gives you $100,000 in virtual cash to practice trading real stocks — completely risk-free. Before you dive in, we recommend reading our beginner's guide.</span>
+    
+    <div class="welcome-left">
+      <div class="welcome-emoji">👋</div>
+      <div class="welcome-text">
+        <div class="welcome-title">
+          New to investing? You're in the right place.
+        </div>
+        <div class="welcome-sub">
+          Meridian gives you <strong>$100,000 in virtual cash</strong> to practice trading real stocks — completely risk-free.
+          Before you dive in, we recommend reading our beginner's guide.
+        </div>
+      </div>
     </div>
+
     <div class="welcome-actions">
-      <a href="{% url 'gettingStarted' %}" class="welcome-cta">📚 Read the Guide →</a>
-      <button class="welcome-skip" onclick="dismissBanner()">Skip for now</button>
-      <button class="welcome-dismiss" onclick="dismissBanner()" title="Dismiss">✕</button>
+      <a href="{% url 'gettingStarted' %}" class="welcome-cta">
+        📚 Read the Guide →
+      </a>
+      <button class="welcome-skip">Skip for now</button>
+      <button class="welcome-dismiss" title="Dismiss">✕</button>
     </div>
+
   </div>
 </div>
 
@@ -67,14 +79,14 @@
   });
 
   // ── Welcome Banner ────────────────────────────────────────────
-  // Show banner unless user has dismissed it before
-  if (!localStorage.getItem('meridian_banner_dismissed')) {
-    document.getElementById('welcomeBanner').style.display = 'block';
-  }
-  function dismissBanner() {
-    document.getElementById('welcomeBanner').style.display = 'none';
-    localStorage.setItem('meridian_banner_dismissed', '1');
-  }
+  // // Show banner unless user has dismissed it before
+  // if (!localStorage.getItem('meridian_banner_dismissed')) {
+  //   document.getElementById('welcomeBanner').style.display = 'block';
+  // }
+  // function dismissBanner() {
+  //   document.getElementById('welcomeBanner').style.display = 'none';
+  //   localStorage.setItem('meridian_banner_dismissed', '1');
+  // }
 
   // ── Search ────────────────────────────────────────────────────
   let searchTimer;
