@@ -518,7 +518,7 @@
 
       <div class="glossary-term" onclick="toggleGlossary(this)">
         <div class="glossary-term-header">
-          <span class="glossary-word">P/E Ratio</span>
+          <span class="glossary-word" id="pe-ratio">P/E Ratio</span>
           <span class="glossary-chevron">▼</span>
         </div>
         <div class="glossary-def">
@@ -540,7 +540,7 @@
 
       <div class="glossary-term" onclick="toggleGlossary(this)">
         <div class="glossary-term-header">
-          <span class="glossary-word">Dividend Yield</span>
+          <span class="glossary-word" id="dividend-yield">Dividend Yield</span>
           <span class="glossary-chevron">▼</span>
         </div>
         <div class="glossary-def">
@@ -551,7 +551,7 @@
 
       <div class="glossary-term" onclick="toggleGlossary(this)">
         <div class="glossary-term-header">
-          <span class="glossary-word">Volume</span>
+          <span class="glossary-word" id="volume">Volume</span>
           <span class="glossary-chevron">▼</span>
         </div>
         <div class="glossary-def">
@@ -562,7 +562,7 @@
 
       <div class="glossary-term" onclick="toggleGlossary(this)">
         <div class="glossary-term-header">
-          <span class="glossary-word">52-Week High / Low</span>
+          <span class="glossary-word" id="52week">52-Week High / Low</span>
           <span class="glossary-chevron">▼</span>
         </div>
         <div class="glossary-def">
@@ -867,6 +867,20 @@
 </div>
 
 <script>
+window.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash; // e.g. "#52week"
+    if (hash) {
+      const id = hash.substring(1);
+      const term = document.getElementById(id);
+      if (term) {
+        const glossaryTerm = term.closest('.glossary-term');
+        if (glossaryTerm) {
+          glossaryTerm.classList.add('open');
+        }
+      }
+    }
+  });
+
 function toggleGlossary(el) {
   el.classList.toggle('open');
 }
