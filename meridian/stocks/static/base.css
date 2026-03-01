@@ -92,10 +92,11 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
 }
 
 .nav-inner {
-    max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     padding: 0 20px;
     display: flex;
@@ -343,6 +344,34 @@ main {
   font-size: 14px;
   color: var(--text3);
   cursor: pointer;
+}
+
+/* Container */
+#google_translate_element {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* Hide the Google Translate logo (optional) */
+.goog-logo-link { 
+    display: none !important; 
+}
+
+/* Style the dropdown */
+.goog-te-combo {
+    background: var(--bg3);
+    color: var(--text);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+}
+
+/* Dropdown hover/focus */
+.goog-te-combo:focus {
+    border-color: var(--accent);
 }
 
 @media (max-width: 900px) {
